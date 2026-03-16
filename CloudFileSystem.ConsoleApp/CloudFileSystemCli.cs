@@ -183,7 +183,8 @@ public class CloudFileSystemCli
         if (component == null)
             return;
 
-        _commandManager.Execute(new DeleteCommand(_root, component));
+        var parent = component.Parent ?? _root;
+        _commandManager.Execute(new DeleteCommand(parent, component));
         _console.WriteLine($"Deleted: {component.Name}");
     }
 
@@ -288,13 +289,31 @@ public class CloudFileSystemCli
             _console.WriteLine($"Redone: {command.Description}");
     }
 
-    private FileSystemComponent? FindChild(string name)
+    /// <summary>
+    /// 依名稱或路徑查找元件。支援 <c>/</c> 分隔的多層路徑（如 <c>"目錄A/目錄B/檔案.txt"</c>），
+    /// 不含 <c>/</c> 時僅搜尋根目錄的直接子元件。
+    /// </summary>
+    private FileSystemComponent? FindChild(string nameOrPath)
     {
-        var component = _root.Children.FirstOrDefault(c =>
-            c.Name.Equals(name, StringComparison.Ordinal));
-        if (component == null)
-            _console.WriteError($"Not found: {name}");
-        return component;
+        var segments = nameOrPath.Split('/');
+        FileSystemComponent? current = null;
+        var searchIn = _root.Children;
+
+        foreach (var segment in segments)
+        {
+            current = searchIn.FirstOrDefault(c =>
+                c.Name.Equals(segment, StringComparison.Ordinal));
+            if (current == null)
+            {
+                _console.WriteError($"Not found: {nameOrPath}");
+                return null;
+            }
+
+            if (current is Directory dir)
+                searchIn = dir.Children;
+        }
+
+        return current;
     }
 
     private static bool TryParseSortBy(string value, out SortBy sortBy)

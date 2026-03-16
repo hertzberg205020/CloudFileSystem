@@ -205,4 +205,83 @@ public class CloudFileSystemCliTests
 
         console.ErrorOutput.Should().Contain("Not found: nonexistent.txt");
     }
+
+    [Fact]
+    public void Start_TagNestedFile_TagsViaPath()
+    {
+        var (console, cli) = CreateCli(
+            "tag 個人筆記 (Personal_Notes)/待辦清單.txt Urgent",
+            "display");
+
+        cli.Start();
+
+        console.Output.Should().Contain("Tagged 待辦清單.txt as Urgent");
+        console.Output.Should().Contain("待辦清單.txt [純文字檔] (編碼: UTF-8, 大小: 1KB) {Urgent}");
+    }
+
+    [Fact]
+    public void Start_TagDeeplyNestedFile_TagsViaPath()
+    {
+        var (console, cli) = CreateCli(
+            "tag 個人筆記 (Personal_Notes)/2025備份 (Archive_2025)/舊會議記錄.docx Work",
+            "display");
+
+        cli.Start();
+
+        console.Output.Should().Contain("Tagged 舊會議記錄.docx as Work");
+        console.Output.Should().Contain("{Work}");
+    }
+
+    [Fact]
+    public void Start_DeleteNestedFile_RemovesViaPath()
+    {
+        var (console, cli) = CreateCli(
+            "delete 個人筆記 (Personal_Notes)/待辦清單.txt",
+            "display");
+
+        cli.Start();
+
+        console.Output.Should().Contain("Deleted: 待辦清單.txt");
+        // display 後不應再包含待辦清單.txt
+        var displayOutput = console.Output[console.Output.IndexOf("根目錄 (Root)\n")..];
+        displayOutput.Should().NotContain("待辦清單.txt");
+    }
+
+    [Fact]
+    public void Start_CopyNestedFile_CopiesViaPath()
+    {
+        var (console, cli) = CreateCli(
+            "copy 個人筆記 (Personal_Notes)/待辦清單.txt",
+            "paste",
+            "display");
+
+        cli.Start();
+
+        console.Output.Should().Contain("Copied: 待辦清單.txt");
+        console.Output.Should().Contain("Pasted: 待辦清單.txt");
+    }
+
+    [Fact]
+    public void Start_TagNestedDirectory_TagsViaPath()
+    {
+        var (console, cli) = CreateCli(
+            "tag 個人筆記 (Personal_Notes)/2025備份 (Archive_2025) Personal",
+            "display");
+
+        cli.Start();
+
+        console.Output.Should().Contain("Tagged 2025備份 (Archive_2025) as Personal");
+        console.Output.Should().Contain("{Personal}");
+    }
+
+    [Fact]
+    public void Start_InvalidPath_PrintsNotFound()
+    {
+        var (console, cli) = CreateCli(
+            "tag 不存在的目錄/file.txt Urgent");
+
+        cli.Start();
+
+        console.ErrorOutput.Should().Contain("Not found:");
+    }
 }
