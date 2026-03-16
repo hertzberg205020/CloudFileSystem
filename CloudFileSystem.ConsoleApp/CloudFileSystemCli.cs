@@ -55,8 +55,9 @@ public class CloudFileSystemCli
         switch (action)
         {
             case "display":
-                var displayVisitor = new DisplayVisitor(_console);
+                var displayVisitor = new DisplayVisitor();
                 _root.Accept(displayVisitor);
+                _console.Write(displayVisitor.GetOutput());
                 break;
 
             case "size":
