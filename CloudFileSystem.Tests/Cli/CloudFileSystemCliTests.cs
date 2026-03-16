@@ -284,4 +284,75 @@ public class CloudFileSystemCliTests
 
         console.ErrorOutput.Should().Contain("Not found:");
     }
+
+    [Fact]
+    public void Start_PasteToSpecificDirectory_PastesIntoTarget()
+    {
+        var (console, cli) = CreateCli(
+            "copy README.txt",
+            "paste 專案文件 (Project_Docs)",
+            "display");
+
+        cli.Start();
+
+        console.Output.Should().Contain("Pasted: README.txt");
+        // README.txt 應出現在專案文件底下（作為其子元件）
+        var display = console.Output[console.Output.LastIndexOf("根目錄 (Root)\n")..];
+        var lines = display.Split('\n');
+        var projectDocsIndex = Array.FindIndex(lines, l => l.Contains("專案文件 (Project_Docs)"));
+        var readmeUnderProject = Array.FindIndex(lines, projectDocsIndex + 1,
+            l => l.Contains("README.txt") && l.Contains("│"));
+        readmeUnderProject.Should().BeGreaterThan(projectDocsIndex);
+    }
+
+    [Fact]
+    public void Start_PasteToNestedDirectory_PastesViaPath()
+    {
+        var (console, cli) = CreateCli(
+            "copy README.txt",
+            "paste 個人筆記 (Personal_Notes)/2025備份 (Archive_2025)",
+            "display");
+
+        cli.Start();
+
+        console.Output.Should().Contain("Pasted: README.txt");
+    }
+
+    [Fact]
+    public void Start_PasteWithoutPath_PastesToRoot()
+    {
+        var (console, cli) = CreateCli(
+            "copy README.txt",
+            "paste",
+            "display");
+
+        cli.Start();
+
+        // 向下相容：無路徑時貼到根目錄
+        console.Output.Should().Contain("README (1).txt");
+    }
+
+    [Fact]
+    public void Start_PasteToNonDirectory_PrintsError()
+    {
+        var (console, cli) = CreateCli(
+            "copy README.txt",
+            "paste README.txt");
+
+        cli.Start();
+
+        console.ErrorOutput.Should().Contain("Not a directory:");
+    }
+
+    [Fact]
+    public void Start_PasteToInvalidPath_PrintsError()
+    {
+        var (console, cli) = CreateCli(
+            "copy README.txt",
+            "paste 不存在的目錄");
+
+        cli.Start();
+
+        console.ErrorOutput.Should().Contain("Not found:");
+    }
 }

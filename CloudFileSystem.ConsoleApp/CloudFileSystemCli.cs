@@ -87,7 +87,7 @@ public class CloudFileSystemCli
                 break;
 
             case "paste":
-                HandlePaste();
+                HandlePaste(parts);
                 break;
 
             case "sort":
@@ -188,7 +188,7 @@ public class CloudFileSystemCli
         _console.WriteLine($"Deleted: {component.Name}");
     }
 
-    private void HandlePaste()
+    private void HandlePaste(string[] parts)
     {
         if (_clipboard == null)
         {
@@ -196,7 +196,23 @@ public class CloudFileSystemCli
             return;
         }
 
-        var command = new PasteCommand(_root, _clipboard);
+        var target = _root;
+        if (parts.Length > 1)
+        {
+            var path = string.Join(' ', parts[1..]);
+            var found = FindChild(path);
+            if (found == null)
+                return;
+            if (found is not Directory dir)
+            {
+                _console.WriteError($"Not a directory: {found.Name}");
+                return;
+            }
+
+            target = dir;
+        }
+
+        var command = new PasteCommand(target, _clipboard);
         _commandManager.Execute(command);
         _console.WriteLine($"Pasted: {_clipboard.Name}");
     }
