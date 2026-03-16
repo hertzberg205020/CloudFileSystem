@@ -3,13 +3,25 @@ using CloudFileSystem.ConsoleApp.Models;
 
 namespace CloudFileSystem.ConsoleApp.Visitors;
 
+/// <summary>
+/// 將檔案系統結構匯出為 XML 格式的 Visitor，對應功能二-3。
+/// </summary>
+/// <remarks>
+/// 走訪完成後透過 <see cref="GetXml"/> 取得產生的 XML 字串。
+/// 元件名稱中的特殊字元會經過清理以產生合法的 XML 標籤名稱。
+/// </remarks>
 public class XmlExportVisitor : IFileSystemVisitor
 {
     private readonly StringBuilder _xmlBuilder = new();
     private int _indentLevel;
 
+    /// <summary>
+    /// 取得走訪後產生的 XML 字串。
+    /// </summary>
+    /// <returns>完整的 XML 結構字串。</returns>
     public string GetXml() => _xmlBuilder.ToString();
 
+    /// <inheritdoc/>
     public void Visit(Directory directory)
     {
         var tagName = SanitizeTagName(directory.Name);
@@ -21,6 +33,7 @@ public class XmlExportVisitor : IFileSystemVisitor
         AppendLine($"</{tagName}>");
     }
 
+    /// <inheritdoc/>
     public void Visit(WordDocument file)
     {
         var tagName = SanitizeTagName(file.Name);
@@ -29,6 +42,7 @@ public class XmlExportVisitor : IFileSystemVisitor
         );
     }
 
+    /// <inheritdoc/>
     public void Visit(ImageFile file)
     {
         var tagName = SanitizeTagName(file.Name);
@@ -37,6 +51,7 @@ public class XmlExportVisitor : IFileSystemVisitor
         );
     }
 
+    /// <inheritdoc/>
     public void Visit(TextFile file)
     {
         var tagName = SanitizeTagName(file.Name);

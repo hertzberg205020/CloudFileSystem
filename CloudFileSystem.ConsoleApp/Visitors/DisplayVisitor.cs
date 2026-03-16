@@ -2,16 +2,27 @@ using CloudFileSystem.ConsoleApp.Models;
 
 namespace CloudFileSystem.ConsoleApp.Visitors;
 
+/// <summary>
+/// 以樹狀結構格式顯示檔案系統的 Visitor，對應功能一「目錄結構呈現」。
+/// </summary>
+/// <remarks>
+/// 輸出格式使用 <c>├──</c>、<c>└──</c> 等 Box-drawing 字元繪製樹狀縮排。
+/// </remarks>
 public class DisplayVisitor : IFileSystemVisitor
 {
     private readonly IConsole _console;
     private readonly List<bool> _isLast = [];
 
+    /// <summary>
+    /// 初始化 <see cref="DisplayVisitor"/> 的新執行個體。
+    /// </summary>
+    /// <param name="console">用於輸出樹狀結構的 Console 抽象。</param>
     public DisplayVisitor(IConsole console)
     {
         _console = console;
     }
 
+    /// <inheritdoc/>
     public void Visit(Directory directory)
     {
         if (_isLast.Count == 0)
@@ -34,6 +45,7 @@ public class DisplayVisitor : IFileSystemVisitor
         }
     }
 
+    /// <inheritdoc/>
     public void Visit(WordDocument file)
     {
         PrintPrefix();
@@ -42,6 +54,7 @@ public class DisplayVisitor : IFileSystemVisitor
         );
     }
 
+    /// <inheritdoc/>
     public void Visit(ImageFile file)
     {
         PrintPrefix();
@@ -50,6 +63,7 @@ public class DisplayVisitor : IFileSystemVisitor
         );
     }
 
+    /// <inheritdoc/>
     public void Visit(TextFile file)
     {
         PrintPrefix();

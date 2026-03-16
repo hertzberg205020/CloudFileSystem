@@ -3,17 +3,33 @@ using CloudFileSystem.ConsoleApp.Visitors;
 
 namespace CloudFileSystem.ConsoleApp;
 
+/// <summary>
+/// 雲端檔案系統的互動式 CLI controller。
+/// </summary>
+/// <remarks>
+/// <para>透過建構子注入 <see cref="IConsole"/> 與根目錄 <see cref="Directory"/>，
+/// 採用指令迴圈模式接收使用者輸入並分派至對應的 <see cref="IFileSystemVisitor"/>。</para>
+/// <para>支援的指令：<c>display</c>、<c>size</c>、<c>search</c>、<c>xml</c>、<c>exit</c>。</para>
+/// </remarks>
 public class CloudFileSystemCli
 {
     private readonly IConsole _console;
     private readonly Directory _root;
 
+    /// <summary>
+    /// 初始化 <see cref="CloudFileSystemCli"/> 的新執行個體。
+    /// </summary>
+    /// <param name="root">檔案系統的根目錄。</param>
+    /// <param name="console">用於 I/O 操作的 Console 抽象。</param>
     public CloudFileSystemCli(Directory root, IConsole console)
     {
         _root = root;
         _console = console;
     }
 
+    /// <summary>
+    /// 啟動互動式指令迴圈，持續接收並執行使用者指令，直到輸入 <c>exit</c> 或輸入結束。
+    /// </summary>
     public void Start()
     {
         while (true)

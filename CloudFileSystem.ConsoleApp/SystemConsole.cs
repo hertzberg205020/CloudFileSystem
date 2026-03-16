@@ -1,5 +1,8 @@
 namespace CloudFileSystem.ConsoleApp;
 
+/// <summary>
+/// <see cref="IConsole"/> 的生產實作，委派至 <see cref="Console"/> 的對應方法。
+/// </summary>
 public class SystemConsole : IConsole
 {
     public string? ReadLine() => Console.ReadLine();
