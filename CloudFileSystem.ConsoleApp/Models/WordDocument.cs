@@ -30,4 +30,12 @@ public class WordDocument : File
     {
         visitor.Visit(this);
     }
+
+    /// <inheritdoc/>
+    public override FileSystemComponent DeepCopy()
+    {
+        var copy = new WordDocument(Name, Size, CreatedAt, PageCount);
+        CopyTagsTo(copy);
+        return copy;
+    }
 }

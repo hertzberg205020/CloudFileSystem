@@ -100,4 +100,109 @@ public class CloudFileSystemCliTests
         console.Output.Should().Contain("[目錄]");
         console.Output.Should().Contain("Total Size:");
     }
+
+    [Fact]
+    public void Start_DeleteThenUndo_RestoresComponent()
+    {
+        var (console, cli) = CreateCli("delete README.txt", "display", "undo", "display");
+
+        cli.Start();
+
+        var output = console.Output;
+        // After delete + display, README.txt should be gone
+        var firstDisplay = output.IndexOf("根目錄 (Root)\n", output.IndexOf("Deleted:"));
+        var secondDisplay = output.IndexOf("根目錄 (Root)\n", output.IndexOf("Undone:"));
+        var afterUndo = output[secondDisplay..];
+        afterUndo.Should().Contain("README.txt");
+    }
+
+    [Fact]
+    public void Start_CopyAndPaste_CreatesDeepCopy()
+    {
+        var (console, cli) = CreateCli("copy README.txt", "paste", "display");
+
+        cli.Start();
+
+        console.Output.Should().Contain("Copied: README.txt");
+        console.Output.Should().Contain("Pasted: README.txt");
+        // Original + copy should both exist
+        console.Output.Should().Contain("README.txt [純文字檔]");
+        console.Output.Should().Contain("README (1).txt [純文字檔]");
+    }
+
+    [Fact]
+    public void Start_SortByNameAsc_ReordersChildren()
+    {
+        var (console, cli) = CreateCli("sort name asc", "display");
+
+        cli.Start();
+
+        console.Output.Should().Contain("Sorted by Name Asc");
+    }
+
+    [Fact]
+    public void Start_TagAndDisplay_ShowsTag()
+    {
+        var (console, cli) = CreateCli("tag README.txt Urgent", "display");
+
+        cli.Start();
+
+        console.Output.Should().Contain("Tagged README.txt as Urgent");
+        console.Output.Should().Contain("{Urgent}");
+    }
+
+    [Fact]
+    public void Start_TagThenUntag_RemovesTag()
+    {
+        var (console, cli) = CreateCli("tag README.txt Work", "untag README.txt Work", "display");
+
+        cli.Start();
+
+        console.Output.Should().Contain("Removed Work from README.txt");
+        // display should not contain tag braces for README
+        var displayOutput = console.Output[console.Output.LastIndexOf("根目錄 (Root)\n")..];
+        displayOutput.Should().NotContain("{Work}");
+    }
+
+    [Fact]
+    public void Start_UndoWithoutHistory_PrintsError()
+    {
+        var (console, cli) = CreateCli("undo");
+
+        cli.Start();
+
+        console.ErrorOutput.Should().Contain("Nothing to undo.");
+    }
+
+    [Fact]
+    public void Start_RedoAfterUndo_ReExecutes()
+    {
+        var (console, cli) = CreateCli("tag README.txt Personal", "undo", "redo", "display");
+
+        cli.Start();
+
+        console.Output.Should().Contain("Undone: Tag README.txt as Personal");
+        console.Output.Should().Contain("Redone: Tag README.txt as Personal");
+        console.Output.Should().Contain("{Personal}");
+    }
+
+    [Fact]
+    public void Start_PasteWithoutCopy_PrintsError()
+    {
+        var (console, cli) = CreateCli("paste");
+
+        cli.Start();
+
+        console.ErrorOutput.Should().Contain("Clipboard is empty.");
+    }
+
+    [Fact]
+    public void Start_DeleteNonExistent_PrintsError()
+    {
+        var (console, cli) = CreateCli("delete nonexistent.txt");
+
+        cli.Start();
+
+        console.ErrorOutput.Should().Contain("Not found: nonexistent.txt");
+    }
 }

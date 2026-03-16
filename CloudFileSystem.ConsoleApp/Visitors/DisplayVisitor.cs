@@ -26,13 +26,17 @@ public class DisplayVisitor : IFileSystemVisitor
     {
         if (_isLast.Count == 0)
         {
-            _outputBuilder.AppendLine(directory.Name);
+            _outputBuilder.Append(directory.Name);
+            AppendTags(directory);
+            _outputBuilder.AppendLine();
         }
         else
         {
             var tag = directory.Parent?.Parent == null ? "目錄" : "子目錄";
             AppendPrefix();
-            _outputBuilder.AppendLine($"{directory.Name} [{tag}]");
+            _outputBuilder.Append($"{directory.Name} [{tag}]");
+            AppendTags(directory);
+            _outputBuilder.AppendLine();
         }
 
         var children = directory.Children.ToList();
@@ -48,27 +52,42 @@ public class DisplayVisitor : IFileSystemVisitor
     public void Visit(WordDocument file)
     {
         AppendPrefix();
-        _outputBuilder.AppendLine(
+        _outputBuilder.Append(
             $"{file.Name} [Word 檔案] (頁數: {file.PageCount}, 大小: {File.FormatSize(file.Size)})"
         );
+        AppendTags(file);
+        _outputBuilder.AppendLine();
     }
 
     /// <inheritdoc/>
     public void Visit(ImageFile file)
     {
         AppendPrefix();
-        _outputBuilder.AppendLine(
+        _outputBuilder.Append(
             $"{file.Name} [圖片] (解析度: {file.Width}x{file.Height}, 大小: {File.FormatSize(file.Size)})"
         );
+        AppendTags(file);
+        _outputBuilder.AppendLine();
     }
 
     /// <inheritdoc/>
     public void Visit(TextFile file)
     {
         AppendPrefix();
-        _outputBuilder.AppendLine(
+        _outputBuilder.Append(
             $"{file.Name} [純文字檔] (編碼: {file.Encoding}, 大小: {File.FormatSize(file.Size)})"
         );
+        AppendTags(file);
+        _outputBuilder.AppendLine();
+    }
+
+    private void AppendTags(FileSystemComponent component)
+    {
+        if (component.Tags.Count > 0)
+        {
+            var sorted = component.Tags.OrderBy(t => t).Select(t => t.ToString());
+            _outputBuilder.Append($" {{{string.Join(", ", sorted)}}}");
+        }
     }
 
     private void AppendPrefix()

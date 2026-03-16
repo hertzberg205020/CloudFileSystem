@@ -8,6 +8,7 @@ namespace CloudFileSystem.ConsoleApp.Models;
 /// <remarks>
 /// <para>所有檔案與目錄皆繼承此類別，透過 <see cref="Accept"/> 方法支援 Visitor Pattern 的雙重分派。</para>
 /// <para>每個元件透過 <see cref="Parent"/> 維護父子關係，並可透過 <see cref="GetPath"/> 取得完整路徑。</para>
+/// <para>支援 <see cref="Tags"/> 標籤與 <see cref="DeepCopy"/> 深拷貝（Prototype Pattern）。</para>
 /// </remarks>
 /// <seealso cref="Directory"/>
 /// <seealso cref="File"/>
@@ -26,13 +27,18 @@ public abstract class FileSystemComponent
     /// 取得此元件的顯示名稱，不包含路徑。
     /// </summary>
     /// <value>檔案或目錄的名稱，例如 <c>"需求規格書.docx"</c> 或 <c>"專案文件 (Project_Docs)"</c>。</value>
-    public string Name { get; }
+    public string Name { get; internal set; }
 
     /// <summary>
     /// 取得或設定此元件的父目錄。
     /// </summary>
     /// <value>父目錄的參考；若為根目錄則為 <see langword="null"/>。</value>
     public Directory? Parent { get; internal set; }
+
+    /// <summary>
+    /// 取得此元件的標籤集合。
+    /// </summary>
+    public HashSet<Tag> Tags { get; } = [];
 
     /// <summary>
     /// 取得此元件的大小（單位：Bytes）。
@@ -47,6 +53,24 @@ public abstract class FileSystemComponent
     public abstract void Accept(IFileSystemVisitor visitor);
 
     /// <summary>
+    /// 建立此元件的深層副本（Prototype Pattern）。
+    /// </summary>
+    /// <returns>完全獨立的副本，<see cref="Parent"/> 為 <see langword="null"/>。</returns>
+    public abstract FileSystemComponent DeepCopy();
+
+    /// <summary>
+    /// 為此元件加上標籤。
+    /// </summary>
+    /// <param name="tag">要加入的標籤。</param>
+    public void AddTag(Tag tag) => Tags.Add(tag);
+
+    /// <summary>
+    /// 移除此元件的標籤。
+    /// </summary>
+    /// <param name="tag">要移除的標籤。</param>
+    public void RemoveTag(Tag tag) => Tags.Remove(tag);
+
+    /// <summary>
     /// 取得此元件從根目錄到自身的完整路徑。
     /// </summary>
     /// <returns>以 <c>"/"</c> 分隔的完整路徑字串，例如 <c>"根目錄 (Root)/專案文件 (Project_Docs)/需求規格書.docx"</c>。</returns>
@@ -55,5 +79,15 @@ public abstract class FileSystemComponent
         if (Parent == null)
             return Name;
         return Parent.GetPath() + "/" + Name;
+    }
+
+    /// <summary>
+    /// 將此元件的標籤複製到目標元件。
+    /// </summary>
+    /// <param name="target">要複製標籤的目標元件。</param>
+    protected void CopyTagsTo(FileSystemComponent target)
+    {
+        foreach (var tag in Tags)
+            target.Tags.Add(tag);
     }
 }

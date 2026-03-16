@@ -45,6 +45,61 @@ public class Directory : FileSystemComponent
         _children.Remove(component);
     }
 
+    /// <summary>
+    /// 將指定的元件插入此目錄的指定位置。
+    /// </summary>
+    /// <param name="index">插入位置的索引。</param>
+    /// <param name="component">要插入的檔案或子目錄。</param>
+    public void Insert(int index, FileSystemComponent component)
+    {
+        component.Parent = this;
+        _children.Insert(index, component);
+    }
+
+    /// <summary>
+    /// 取得指定元件在此目錄中的索引位置。
+    /// </summary>
+    /// <param name="component">要查詢的元件。</param>
+    /// <returns>元件的索引；若不存在則回傳 -1。</returns>
+    public int IndexOf(FileSystemComponent component) => _children.IndexOf(component);
+
+    /// <summary>
+    /// 依指定的欄位與方向遞迴排序此目錄及所有子目錄的子元件。
+    /// </summary>
+    /// <param name="sortBy">排序依據。</param>
+    /// <param name="sortOrder">排序方向。</param>
+    public void Sort(SortBy sortBy, SortOrder sortOrder)
+    {
+        Comparison<FileSystemComponent> comparison = sortBy switch
+        {
+            SortBy.Name => (a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal),
+            SortBy.Size => (a, b) => a.GetSize().CompareTo(b.GetSize()),
+            SortBy.Extension => (a, b) => string.Compare(
+                Path.GetExtension(a.Name),
+                Path.GetExtension(b.Name),
+                StringComparison.Ordinal),
+            _ => throw new ArgumentOutOfRangeException(nameof(sortBy)),
+        };
+
+        _children.Sort(comparison);
+
+        if (sortOrder == SortOrder.Desc)
+            _children.Reverse();
+
+        foreach (var child in _children.OfType<Directory>())
+            child.Sort(sortBy, sortOrder);
+    }
+
+    /// <summary>
+    /// 將子元件順序設定為指定的順序，用於 undo 還原排序。
+    /// </summary>
+    /// <param name="order">要還原的子元件順序。</param>
+    public void SetChildrenOrder(IList<FileSystemComponent> order)
+    {
+        _children.Clear();
+        _children.AddRange(order);
+    }
+
     /// <inheritdoc/>
     /// <remarks>遞迴加總所有子元件的大小。</remarks>
     public override long GetSize()
@@ -56,5 +111,16 @@ public class Directory : FileSystemComponent
     public override void Accept(IFileSystemVisitor visitor)
     {
         visitor.Visit(this);
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>遞迴深拷貝所有子元件，透過 <see cref="Add"/> 自動維護 <see cref="FileSystemComponent.Parent"/> 參照。</remarks>
+    public override FileSystemComponent DeepCopy()
+    {
+        var copy = new Directory(Name);
+        CopyTagsTo(copy);
+        foreach (var child in _children)
+            copy.Add(child.DeepCopy());
+        return copy;
     }
 }

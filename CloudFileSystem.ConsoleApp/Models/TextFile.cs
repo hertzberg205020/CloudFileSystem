@@ -31,4 +31,12 @@ public class TextFile : File
     {
         visitor.Visit(this);
     }
+
+    /// <inheritdoc/>
+    public override FileSystemComponent DeepCopy()
+    {
+        var copy = new TextFile(Name, Size, CreatedAt, Encoding);
+        CopyTagsTo(copy);
+        return copy;
+    }
 }

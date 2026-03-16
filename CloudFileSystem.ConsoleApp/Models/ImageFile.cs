@@ -37,4 +37,12 @@ public class ImageFile : File
     {
         visitor.Visit(this);
     }
+
+    /// <inheritdoc/>
+    public override FileSystemComponent DeepCopy()
+    {
+        var copy = new ImageFile(Name, Size, CreatedAt, Width, Height);
+        CopyTagsTo(copy);
+        return copy;
+    }
 }
