@@ -36,8 +36,8 @@ dotnet test
 
 | 指令 | 說明 | 範例 |
 |------|------|------|
-| `delete <名稱>` | 刪除指定的檔案或目錄 | `delete README.txt` |
-| `copy <名稱>` | 複製指定元件至剪貼簿 | `copy 專案文件 (Project_Docs)` |
+| `delete <名稱或路徑>` | 刪除指定的檔案或目錄 | `delete README.txt` |
+| `copy <名稱或路徑>` | 複製指定元件至剪貼簿 | `copy 專案文件 (Project_Docs)` |
 | `paste` | 將剪貼簿內容貼入根目錄（深拷貝，同名自動改名） | `paste` |
 
 ### 排序指令
@@ -52,10 +52,25 @@ dotnet test
 
 | 指令 | 說明 | 範例 |
 |------|------|------|
-| `tag <名稱> <標籤>` | 為指定元件加上標籤 | `tag README.txt Urgent` |
-| `untag <名稱> <標籤>` | 移除指定元件的標籤 | `untag README.txt Urgent` |
+| `tag <名稱或路徑> <標籤>` | 為指定元件加上標籤 | `tag README.txt Urgent` |
+| `untag <名稱或路徑> <標籤>` | 移除指定元件的標籤 | `untag README.txt Urgent` |
 
 可用標籤：`Urgent`、`Work`、`Personal`。每個元件可同時擁有多個標籤。
+
+### 路徑格式
+
+操作子目錄下的元件時，使用 `/` 分隔路徑。名稱含空白字元不需額外引號：
+
+```
+根目錄 (Root)> tag 個人筆記 (Personal_Notes)/待辦清單.txt Urgent
+Tagged 待辦清單.txt as Urgent
+
+根目錄 (Root)> delete 個人筆記 (Personal_Notes)/2025備份 (Archive_2025)/舊會議記錄.docx
+Deleted: 舊會議記錄.docx
+
+根目錄 (Root)> copy 專案文件 (Project_Docs)/需求規格書.docx
+Copied: 需求規格書.docx
+```
 
 ### 狀態管理
 
