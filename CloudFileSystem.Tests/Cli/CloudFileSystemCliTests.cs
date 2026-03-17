@@ -356,4 +356,36 @@ public class CloudFileSystemCliTests
 
         console.ErrorOutput.Should().Contain("Not found:");
     }
+
+    [Fact]
+    public void Start_DeleteSameComponentTwice_ShowsErrorAndContinues()
+    {
+        var (console, cli) = CreateCli("delete README.txt", "delete README.txt", "display");
+
+        cli.Start();
+
+        console.Output.Should().Contain("Deleted: README.txt");
+        console.ErrorOutput.Should().Contain("Not found: README.txt");
+        // display 仍正常執行
+        console.Output.Should().Contain("根目錄 (Root)");
+    }
+
+    [Fact]
+    public void Start_ExceptionDuringCommand_LoopContinues()
+    {
+        // 先刪除再 undo，再重複刪除觸發例外，最後 display 確認迴圈繼續
+        var (console, cli) = CreateCli(
+            "delete README.txt",
+            "undo",
+            "delete README.txt",
+            "delete README.txt",
+            "display"
+        );
+
+        cli.Start();
+
+        console.ErrorOutput.Should().Contain("Not found: README.txt");
+        // display 仍正常執行（找 display tree 輸出而非 prompt）
+        console.Output.Should().Contain("專案文件 (Project_Docs) [目錄]");
+    }
 }

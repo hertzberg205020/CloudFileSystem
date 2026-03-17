@@ -57,65 +57,72 @@ public class CloudFileSystemCli
 
     private void ExecuteCommand(string command)
     {
-        var parts = command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        var action = parts[0].ToLowerInvariant();
-
-        switch (action)
+        try
         {
-            // === 唯讀指令 ===
-            case "display":
-                HandleDisplay();
-                break;
+            var parts = command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var action = parts[0].ToLowerInvariant();
 
-            case "size":
-                HandleSize();
-                break;
+            switch (action)
+            {
+                // === 唯讀指令 ===
+                case "display":
+                    HandleDisplay();
+                    break;
 
-            case "search":
-                HandleSearch(parts);
-                break;
+                case "size":
+                    HandleSize();
+                    break;
 
-            case "xml":
-                HandleXml();
-                break;
+                case "search":
+                    HandleSearch(parts);
+                    break;
 
-            case "copy":
-                HandleCopy(parts);
-                break;
+                case "xml":
+                    HandleXml();
+                    break;
 
-            // === 突變指令（透過 CommandManager）===
-            case "delete":
-                HandleDelete(parts);
-                break;
+                case "copy":
+                    HandleCopy(parts);
+                    break;
 
-            case "paste":
-                HandlePaste(parts);
-                break;
+                // === 突變指令（透過 CommandManager）===
+                case "delete":
+                    HandleDelete(parts);
+                    break;
 
-            case "sort":
-                HandleSort(parts);
-                break;
+                case "paste":
+                    HandlePaste(parts);
+                    break;
 
-            case "tag":
-                HandleTag(parts);
-                break;
+                case "sort":
+                    HandleSort(parts);
+                    break;
 
-            case "untag":
-                HandleUntag(parts);
-                break;
+                case "tag":
+                    HandleTag(parts);
+                    break;
 
-            // === 管理指令 ===
-            case "undo":
-                HandleUndo();
-                break;
+                case "untag":
+                    HandleUntag(parts);
+                    break;
 
-            case "redo":
-                HandleRedo();
-                break;
+                // === 管理指令 ===
+                case "undo":
+                    HandleUndo();
+                    break;
 
-            default:
-                _console.WriteError($"Unknown command: {action}");
-                break;
+                case "redo":
+                    HandleRedo();
+                    break;
+
+                default:
+                    _console.WriteError($"Unknown command: {action}");
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            _console.WriteError($"Error: {ex.Message}");
         }
     }
 
