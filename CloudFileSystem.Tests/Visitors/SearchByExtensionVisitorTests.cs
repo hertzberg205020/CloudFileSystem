@@ -70,4 +70,18 @@ public class SearchByExtensionVisitorTests
         visitor.Results.Should().HaveCount(1);
         visitor.Results.Should().Contain(r => r.Contains("系統架構圖.png"));
     }
+
+    [Fact]
+    public void Visit_SearchUpperCaseExtension_FindsCaseInsensitively()
+    {
+        var console = new TestConsole();
+        var visitor = new SearchByExtensionVisitor(".DOCX", console);
+        var root = SampleStructureFactory.CreateSampleRoot();
+
+        root.Accept(visitor);
+
+        visitor.Results.Should().HaveCount(2);
+        visitor.Results.Should().Contain(r => r.Contains("需求規格書.docx"));
+        visitor.Results.Should().Contain(r => r.Contains("舊會議記錄.docx"));
+    }
 }

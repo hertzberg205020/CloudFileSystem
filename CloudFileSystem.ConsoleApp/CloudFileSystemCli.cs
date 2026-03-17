@@ -61,6 +61,7 @@ public class CloudFileSystemCli
         try
         {
             var parts = Tokenize(command);
+            if (parts.Length == 0) return;
             var action = parts[0].ToLowerInvariant();
 
             switch (action)

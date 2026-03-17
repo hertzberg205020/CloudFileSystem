@@ -119,8 +119,11 @@ public class FileTests
 
     [Theory]
     [InlineData(500, "500B")]
+    [InlineData(1023, "1023B")]
     [InlineData(1024, "1KB")]
     [InlineData(500 * 1024, "500KB")]
+    [InlineData(1048575, "1048575B")]
+    [InlineData(1048576, "1MB")]
     [InlineData(2 * 1024 * 1024, "2MB")]
     public void FormatSize_VariousValues_ReturnsExpectedFormat(long bytes, string expected)
     {

@@ -420,4 +420,74 @@ public class CloudFileSystemCliTests
         var displayOutput = console.Output[console.Output.LastIndexOf("根目錄 (Root)\n")..];
         displayOutput.Should().NotContain("{Work}");
     }
+
+    [Fact]
+    public void Start_SortInvalidField_PrintsError()
+    {
+        var (console, cli) = CreateCli("sort invalid asc");
+
+        cli.Start();
+
+        console.ErrorOutput.Should().Contain("Invalid sort field");
+    }
+
+    [Fact]
+    public void Start_SortInvalidOrder_PrintsError()
+    {
+        var (console, cli) = CreateCli("sort name invalid");
+
+        cli.Start();
+
+        console.ErrorOutput.Should().Contain("Invalid sort order");
+    }
+
+    [Fact]
+    public void Start_TagWithoutEnoughArgs_PrintsUsage()
+    {
+        var (console, cli) = CreateCli("tag README.txt");
+
+        cli.Start();
+
+        console.ErrorOutput.Should().Contain("Usage: tag");
+    }
+
+    [Fact]
+    public void Start_TagInvalidTagValue_PrintsError()
+    {
+        var (console, cli) = CreateCli("tag README.txt InvalidTag");
+
+        cli.Start();
+
+        console.ErrorOutput.Should().Contain("Invalid tag");
+    }
+
+    [Fact]
+    public void Start_UntagWithoutEnoughArgs_PrintsUsage()
+    {
+        var (console, cli) = CreateCli("untag README.txt");
+
+        cli.Start();
+
+        console.ErrorOutput.Should().Contain("Usage: untag");
+    }
+
+    [Fact]
+    public void Start_CopyWithoutArgs_PrintsUsage()
+    {
+        var (console, cli) = CreateCli("copy");
+
+        cli.Start();
+
+        console.ErrorOutput.Should().Contain("Usage: copy");
+    }
+
+    [Fact]
+    public void Start_DeleteWithoutArgs_PrintsUsage()
+    {
+        var (console, cli) = CreateCli("delete");
+
+        cli.Start();
+
+        console.ErrorOutput.Should().Contain("Usage: delete");
+    }
 }
