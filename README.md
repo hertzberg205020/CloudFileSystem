@@ -38,7 +38,7 @@ dotnet test
 |------|------|------|
 | `delete <名稱或路徑>` | 刪除指定的檔案或目錄 | `delete README.txt` |
 | `copy <名稱或路徑>` | 複製指定元件至剪貼簿 | `copy 專案文件 (Project_Docs)` |
-| `paste` | 將剪貼簿內容貼入根目錄（深拷貝，同名自動改名） | `paste` |
+| `paste [路徑]` | 將剪貼簿內容貼入指定目錄（預設根目錄，深拷貝，同名自動改名） | `paste` |
 
 ### 排序指令
 
@@ -124,6 +124,9 @@ Undone: Delete README.txt
 Copied: README.txt
 
 根目錄 (Root)> paste
+Pasted: README.txt
+
+根目錄 (Root)> paste 專案文件 (Project_Docs)
 Pasted: README.txt
 
 根目錄 (Root)> sort name asc
