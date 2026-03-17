@@ -60,7 +60,7 @@ public class CloudFileSystemCli
     {
         try
         {
-            var parts = command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var parts = Tokenize(command);
             var action = parts[0].ToLowerInvariant();
 
             switch (action)
@@ -255,7 +255,9 @@ public class CloudFileSystemCli
     {
         if (parts.Length < 3)
         {
-            _console.WriteError("Usage: tag <name> <Urgent|Work|Personal>");
+            _console.WriteError(
+                "Usage: tag <name> <Urgent|Work|Personal> (use quotes for names with spaces)"
+            );
             return;
         }
 
@@ -278,7 +280,9 @@ public class CloudFileSystemCli
     {
         if (parts.Length < 3)
         {
-            _console.WriteError("Usage: untag <name> <Urgent|Work|Personal>");
+            _console.WriteError(
+                "Usage: untag <name> <Urgent|Work|Personal> (use quotes for names with spaces)"
+            );
             return;
         }
 

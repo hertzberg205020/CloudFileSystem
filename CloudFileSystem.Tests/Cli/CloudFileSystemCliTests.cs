@@ -388,4 +388,36 @@ public class CloudFileSystemCliTests
         // display 仍正常執行（找 display tree 輸出而非 prompt）
         console.Output.Should().Contain("專案文件 (Project_Docs) [目錄]");
     }
+
+    [Fact]
+    public void Start_TagWithQuotedName_TagsCorrectly()
+    {
+        var (console, cli) = CreateCli(
+            "tag \"個人筆記 (Personal_Notes)/待辦清單.txt\" Urgent",
+            "display"
+        );
+
+        cli.Start();
+
+        console.Output.Should().Contain("Tagged 待辦清單.txt as Urgent");
+        console
+            .Output.Should()
+            .Contain("待辦清單.txt [純文字檔] (編碼: UTF-8, 大小: 1KB) {Urgent}");
+    }
+
+    [Fact]
+    public void Start_UntagWithQuotedName_UntagsCorrectly()
+    {
+        var (console, cli) = CreateCli(
+            "tag \"個人筆記 (Personal_Notes)/待辦清單.txt\" Work",
+            "untag \"個人筆記 (Personal_Notes)/待辦清單.txt\" Work",
+            "display"
+        );
+
+        cli.Start();
+
+        console.Output.Should().Contain("Removed Work from 待辦清單.txt");
+        var displayOutput = console.Output[console.Output.LastIndexOf("根目錄 (Root)\n")..];
+        displayOutput.Should().NotContain("{Work}");
+    }
 }
