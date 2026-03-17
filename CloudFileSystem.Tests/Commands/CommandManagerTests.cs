@@ -95,6 +95,35 @@ public class CommandManagerTests
         _manager.Undo().Should().BeSameAs(third);
     }
 
+    [Fact]
+    public void Undo_UndoThrows_CommandRemainsOnUndoStack()
+    {
+        var command = new ThrowingCommand();
+        _manager.Execute(command);
+        command.ShouldThrowOnUndo = true;
+
+        var act = () => _manager.Undo();
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("Undo failed");
+        _manager.CanUndo.Should().BeTrue();
+        _manager.CanRedo.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Redo_ExecuteThrows_CommandRemainsOnRedoStack()
+    {
+        var command = new ThrowingCommand();
+        _manager.Execute(command);
+        _manager.Undo();
+        command.ShouldThrowOnExecute = true;
+
+        var act = () => _manager.Redo();
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("Execute failed");
+        _manager.CanRedo.Should().BeTrue();
+        _manager.CanUndo.Should().BeFalse();
+    }
+
     /// <summary>
     /// 用於測試的假 Command，記錄 Execute/Undo 呼叫次數。
     /// </summary>
@@ -112,5 +141,24 @@ public class CommandManagerTests
         public void Execute() => ExecuteCount++;
 
         public void Undo() => UndoCount++;
+    }
+
+    private sealed class ThrowingCommand : ICommand
+    {
+        public bool ShouldThrowOnExecute { get; set; }
+        public bool ShouldThrowOnUndo { get; set; }
+        public string Description => "throwing";
+
+        public void Execute()
+        {
+            if (ShouldThrowOnExecute)
+                throw new InvalidOperationException("Execute failed");
+        }
+
+        public void Undo()
+        {
+            if (ShouldThrowOnUndo)
+                throw new InvalidOperationException("Undo failed");
+        }
     }
 }

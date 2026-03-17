@@ -40,7 +40,15 @@ public class CommandManager
             return null;
 
         var command = _undoStack.Pop();
-        command.Undo();
+        try
+        {
+            command.Undo();
+        }
+        catch
+        {
+            _undoStack.Push(command);
+            throw;
+        }
         _redoStack.Push(command);
         return command;
     }
@@ -55,7 +63,15 @@ public class CommandManager
             return null;
 
         var command = _redoStack.Pop();
-        command.Execute();
+        try
+        {
+            command.Execute();
+        }
+        catch
+        {
+            _redoStack.Push(command);
+            throw;
+        }
         _undoStack.Push(command);
         return command;
     }
