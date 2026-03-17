@@ -57,19 +57,26 @@ dotnet test
 
 可用標籤：`Urgent`、`Work`、`Personal`。每個元件可同時擁有多個標籤。
 
-### 路徑格式
-
-操作子目錄下的元件時，使用 `/` 分隔路徑。名稱含空白字元不需額外引號：
+名稱含空白時，建議用雙引號包住以避免與標籤參數產生歧義：
 
 ```
-根目錄 (Root)> tag 個人筆記 (Personal_Notes)/待辦清單.txt Urgent
+根目錄 (Root)> tag "個人筆記 (Personal_Notes)/待辦清單.txt" Urgent
 Tagged 待辦清單.txt as Urgent
+```
 
+### 路徑格式
+
+操作子目錄下的元件時，使用 `/` 分隔路徑。單參數指令（`copy`、`delete`、`paste`）會自動將空白視為名稱的一部分，不需引號。多參數指令（`tag`、`untag`）名稱含空白時，建議用雙引號包住名稱以避免歧義：
+
+```
 根目錄 (Root)> delete 個人筆記 (Personal_Notes)/2025備份 (Archive_2025)/舊會議記錄.docx
 Deleted: 舊會議記錄.docx
 
 根目錄 (Root)> copy 專案文件 (Project_Docs)/需求規格書.docx
 Copied: 需求規格書.docx
+
+根目錄 (Root)> tag "個人筆記 (Personal_Notes)/待辦清單.txt" Urgent
+Tagged 待辦清單.txt as Urgent
 ```
 
 ### 狀態管理
