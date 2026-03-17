@@ -31,6 +31,13 @@ public class Directory : FileSystemComponent
     /// <param name="component">要加入的檔案或子目錄。</param>
     public void Add(FileSystemComponent component)
     {
+        ArgumentNullException.ThrowIfNull(component);
+        if (component == this)
+            throw new InvalidOperationException("不能將元件加為自己的子元件");
+        if (IsAncestorOf(component))
+            throw new InvalidOperationException("不能將祖先目錄加為子元件");
+        if (_children.Any(c => c.Name == component.Name))
+            throw new InvalidOperationException($"已存在同名子元件: {component.Name}");
         component.Parent = this;
         _children.Add(component);
     }
@@ -41,8 +48,10 @@ public class Directory : FileSystemComponent
     /// <param name="component">要移除的檔案或子目錄。</param>
     public void Remove(FileSystemComponent component)
     {
+        ArgumentNullException.ThrowIfNull(component);
+        if (!_children.Remove(component))
+            throw new InvalidOperationException("元件不在此目錄中");
         component.Parent = null;
-        _children.Remove(component);
     }
 
     /// <summary>
@@ -52,6 +61,9 @@ public class Directory : FileSystemComponent
     /// <param name="component">要插入的檔案或子目錄。</param>
     public void Insert(int index, FileSystemComponent component)
     {
+        ArgumentNullException.ThrowIfNull(component);
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(index, _children.Count);
         component.Parent = this;
         _children.Insert(index, component);
     }
@@ -98,8 +110,27 @@ public class Directory : FileSystemComponent
     /// <param name="order">要還原的子元件順序。</param>
     public void SetChildrenOrder(IList<FileSystemComponent> order)
     {
+        ArgumentNullException.ThrowIfNull(order);
+        if (
+            order.Count != _children.Count
+            || !order.All(c => _children.Contains(c))
+        )
+            throw new ArgumentException("順序清單必須包含完全相同的子元件");
         _children.Clear();
         _children.AddRange(order);
+    }
+
+    private bool IsAncestorOf(FileSystemComponent component)
+    {
+        var current = Parent;
+        while (current != null)
+        {
+            if (current == component)
+                return true;
+            current = current.Parent;
+        }
+
+        return false;
     }
 
     /// <inheritdoc/>
