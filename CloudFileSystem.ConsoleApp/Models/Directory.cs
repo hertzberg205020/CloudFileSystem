@@ -111,10 +111,7 @@ public class Directory : FileSystemComponent
     public void SetChildrenOrder(IList<FileSystemComponent> order)
     {
         ArgumentNullException.ThrowIfNull(order);
-        if (
-            order.Count != _children.Count
-            || !order.All(c => _children.Contains(c))
-        )
+        if (order.Count != _children.Count || !order.All(c => _children.Contains(c)))
             throw new ArgumentException("順序清單必須包含完全相同的子元件");
         for (var i = 0; i < order.Count; i++)
             _children[i] = order[i];
