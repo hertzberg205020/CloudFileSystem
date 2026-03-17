@@ -45,10 +45,16 @@ public abstract class File : FileSystemComponent
     /// <returns>格式化後的字串，例如 <c>"500KB"</c>、<c>"2MB"</c> 或 <c>"500B"</c>。</returns>
     public static string FormatSize(long bytes)
     {
-        if (bytes >= 1024 * 1024 && bytes % (1024 * 1024) == 0)
-            return $"{bytes / (1024 * 1024)}MB";
-        if (bytes >= 1024 && bytes % 1024 == 0)
-            return $"{bytes / 1024}KB";
+        if (bytes >= 1024 * 1024)
+        {
+            return bytes % (1024 * 1024) == 0
+                ? $"{bytes / (1024 * 1024)}MB"
+                : $"{bytes / (1024.0 * 1024):0.#}MB";
+        }
+        if (bytes >= 1024)
+        {
+            return bytes % 1024 == 0 ? $"{bytes / 1024}KB" : $"{bytes / 1024.0:0.#}KB";
+        }
         return $"{bytes}B";
     }
 }
