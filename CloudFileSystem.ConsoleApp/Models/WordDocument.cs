@@ -17,6 +17,7 @@ public class WordDocument : File
     public WordDocument(string name, long size, DateTime createdAt, int pageCount)
         : base(name, size, createdAt)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(pageCount);
         PageCount = pageCount;
     }
 

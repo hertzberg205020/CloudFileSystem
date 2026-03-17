@@ -18,6 +18,8 @@ public class ImageFile : File
     public ImageFile(string name, long size, DateTime createdAt, int width, int height)
         : base(name, size, createdAt)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
         Width = width;
         Height = height;
     }

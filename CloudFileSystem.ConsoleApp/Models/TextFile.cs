@@ -17,6 +17,7 @@ public class TextFile : File
     public TextFile(string name, long size, DateTime createdAt, string encoding)
         : base(name, size, createdAt)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(encoding);
         Encoding = encoding;
     }
 

@@ -17,6 +17,7 @@ public abstract class File : FileSystemComponent
     protected File(string name, long size, DateTime createdAt)
         : base(name)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(size);
         Size = size;
         CreatedAt = createdAt;
     }

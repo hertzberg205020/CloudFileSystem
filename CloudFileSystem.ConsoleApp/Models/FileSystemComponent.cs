@@ -20,6 +20,7 @@ public abstract class FileSystemComponent
     /// <param name="name">元件的顯示名稱。</param>
     protected FileSystemComponent(string name)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
         Name = name;
     }
 
@@ -87,6 +88,7 @@ public abstract class FileSystemComponent
     /// <param name="target">要複製標籤的目標元件。</param>
     protected void CopyTagsTo(FileSystemComponent target)
     {
+        ArgumentNullException.ThrowIfNull(target);
         foreach (var tag in Tags)
             target.Tags.Add(tag);
     }
