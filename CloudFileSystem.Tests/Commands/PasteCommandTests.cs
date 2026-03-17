@@ -79,4 +79,64 @@ public class PasteCommandTests
 
         target.Children.Should().BeEmpty();
     }
+
+    [Fact]
+    public void Redo_ReusesClonedObject_DoesNotDeepCopyAgain()
+    {
+        // Arrange
+        var target = new Directory("Root");
+        var clipboard = new TextFile("test.txt", 100, TestDate, "UTF-8");
+        var command = new PasteCommand(target, clipboard);
+        command.Execute();
+        var firstCloned = target.Children[0];
+        command.Undo();
+
+        // Act — redo
+        command.Execute();
+
+        // Assert — same object reference, no new deep copy
+        target.Children.Should().HaveCount(1);
+        target.Children[0].Should().BeSameAs(firstCloned);
+    }
+
+    [Fact]
+    public void Redo_SameDirectoryCopy_PreservesOriginalName()
+    {
+        // Arrange — paste into directory that already has same-named file
+        var target = new Directory("Root");
+        var original = new TextFile("test.txt", 50, TestDate, "UTF-8");
+        target.Add(original);
+        var command = new PasteCommand(target, original);
+        command.Execute(); // produces "test (1).txt"
+        var pastedName = target.Children[1].Name;
+        pastedName.Should().Be("test (1).txt");
+        command.Undo();
+
+        // Act — redo should produce the same name
+        command.Execute();
+
+        // Assert
+        target.Children[1].Name.Should().Be(pastedName);
+    }
+
+    [Fact]
+    public void Redo_MultipleUndoRedoCycles_AlwaysReuseSameObject()
+    {
+        // Arrange
+        var target = new Directory("Root");
+        var clipboard = new TextFile("test.txt", 100, TestDate, "UTF-8");
+        var command = new PasteCommand(target, clipboard);
+        command.Execute();
+        var firstCloned = target.Children[0];
+
+        // Act — multiple undo/redo cycles
+        command.Undo();
+        command.Execute(); // redo 1
+        command.Undo();
+        command.Execute(); // redo 2
+
+        // Assert — still the same object
+        target.Children.Should().HaveCount(1);
+        target.Children[0].Should().BeSameAs(firstCloned);
+    }
 }

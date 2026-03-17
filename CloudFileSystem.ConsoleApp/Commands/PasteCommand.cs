@@ -30,8 +30,12 @@ public class PasteCommand : ICommand
     /// <inheritdoc/>
     public void Execute()
     {
-        _cloned = _clipboard.DeepCopy();
-        _cloned.Name = GenerateUniqueName(_cloned.Name);
+        if (_cloned == null)
+        {
+            _cloned = _clipboard.DeepCopy();
+            _cloned.Name = GenerateUniqueName(_cloned.Name);
+        }
+
         _target.Add(_cloned);
     }
 
