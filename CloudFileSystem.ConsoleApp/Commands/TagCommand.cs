@@ -17,6 +17,7 @@ public class TagCommand : ICommand
     /// <param name="tag">要加入的標籤。</param>
     public TagCommand(FileSystemComponent component, Tag tag)
     {
+        ArgumentNullException.ThrowIfNull(component);
         _component = component;
         _tag = tag;
     }

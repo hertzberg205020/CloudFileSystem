@@ -17,6 +17,7 @@ public class UntagCommand : ICommand
     /// <param name="tag">要移除的標籤。</param>
     public UntagCommand(FileSystemComponent component, Tag tag)
     {
+        ArgumentNullException.ThrowIfNull(component);
         _component = component;
         _tag = tag;
     }

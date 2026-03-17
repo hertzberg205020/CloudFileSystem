@@ -18,6 +18,8 @@ public class PasteCommand : ICommand
     /// <param name="clipboard">clipboard 中的元件參考。</param>
     public PasteCommand(Directory target, FileSystemComponent clipboard)
     {
+        ArgumentNullException.ThrowIfNull(target);
+        ArgumentNullException.ThrowIfNull(clipboard);
         _target = target;
         _clipboard = clipboard;
     }
@@ -49,11 +51,14 @@ public class PasteCommand : ICommand
         var extension = Path.GetExtension(name);
         var baseName = Path.GetFileNameWithoutExtension(name);
 
-        for (var i = 1; ; i++)
+        const int maxRetries = 1000;
+        for (var i = 1; i <= maxRetries; i++)
         {
             var candidate = $"{baseName} ({i}){extension}";
             if (!existingNames.Contains(candidate))
                 return candidate;
         }
+
+        throw new InvalidOperationException("無法產生唯一名稱");
     }
 }

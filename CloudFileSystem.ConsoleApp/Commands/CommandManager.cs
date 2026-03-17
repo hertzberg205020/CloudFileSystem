@@ -24,6 +24,7 @@ public class CommandManager
     /// <param name="command">要執行的 Command。</param>
     public void Execute(ICommand command)
     {
+        ArgumentNullException.ThrowIfNull(command);
         command.Execute();
         _undoStack.Push(command);
         _redoStack.Clear();

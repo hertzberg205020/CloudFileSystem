@@ -20,6 +20,7 @@ public class SortCommand : ICommand
     /// <param name="sortOrder">排序方向。</param>
     public SortCommand(Directory directory, SortBy sortBy, SortOrder sortOrder)
     {
+        ArgumentNullException.ThrowIfNull(directory);
         _directory = directory;
         _sortBy = sortBy;
         _sortOrder = sortOrder;

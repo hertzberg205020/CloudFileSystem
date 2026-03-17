@@ -18,9 +18,13 @@ public class DeleteCommand : ICommand
     /// <param name="component">要刪除的元件。</param>
     public DeleteCommand(Directory parent, FileSystemComponent component)
     {
+        ArgumentNullException.ThrowIfNull(parent);
+        ArgumentNullException.ThrowIfNull(component);
+        _originalIndex = parent.IndexOf(component);
+        if (_originalIndex < 0)
+            throw new InvalidOperationException("元件不在指定的父目錄中");
         _parent = parent;
         _component = component;
-        _originalIndex = parent.IndexOf(component);
     }
 
     /// <inheritdoc/>
