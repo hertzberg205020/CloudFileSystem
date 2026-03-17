@@ -116,8 +116,8 @@ public class Directory : FileSystemComponent
             || !order.All(c => _children.Contains(c))
         )
             throw new ArgumentException("順序清單必須包含完全相同的子元件");
-        _children.Clear();
-        _children.AddRange(order);
+        for (var i = 0; i < order.Count; i++)
+            _children[i] = order[i];
     }
 
     private bool IsAncestorOf(FileSystemComponent component)

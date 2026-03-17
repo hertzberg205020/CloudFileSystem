@@ -156,4 +156,21 @@ public class DirectoryValidationTests
 
         act.Should().Throw<ArgumentException>().WithMessage("*完全相同*");
     }
+
+    [Fact]
+    public void SetChildrenOrder_ValidReorder_PreservesAllChildren()
+    {
+        var dir = new Directory("root");
+        var fileA = new TextFile("a.txt", 100, TestDate, "UTF-8");
+        var fileB = new TextFile("b.txt", 200, TestDate, "UTF-8");
+        var fileC = new TextFile("c.txt", 300, TestDate, "UTF-8");
+        dir.Add(fileA);
+        dir.Add(fileB);
+        dir.Add(fileC);
+
+        dir.SetChildrenOrder(new List<FileSystemComponent> { fileC, fileA, fileB });
+
+        dir.Children.Should().ContainInOrder(fileC, fileA, fileB);
+        dir.Children.Should().AllSatisfy(c => c.Parent.Should().Be(dir));
+    }
 }
