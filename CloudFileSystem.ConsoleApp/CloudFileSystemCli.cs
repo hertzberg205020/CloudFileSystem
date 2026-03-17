@@ -26,6 +26,8 @@ public class CloudFileSystemCli
     /// <param name="console">用於 I/O 操作的 Console 抽象。</param>
     public CloudFileSystemCli(Directory root, IConsole console)
     {
+        ArgumentNullException.ThrowIfNull(root);
+        ArgumentNullException.ThrowIfNull(console);
         _root = root;
         _console = console;
     }
@@ -311,7 +313,13 @@ public class CloudFileSystemCli
     /// </summary>
     private FileSystemComponent? FindChild(string nameOrPath)
     {
-        var segments = nameOrPath.Split('/');
+        if (string.IsNullOrWhiteSpace(nameOrPath))
+        {
+            _console.WriteError("名稱或路徑不可為空白");
+            return null;
+        }
+
+        var segments = nameOrPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
         FileSystemComponent? current = null;
         var searchIn = _root.Children;
 
