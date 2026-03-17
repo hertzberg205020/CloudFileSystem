@@ -9,6 +9,7 @@
   },
   "enabledPlugins": {
     "commit-commands@claude-plugins-official": true,
-    "microsoft-docs@microsoft-docs-marketplace": true
+    "microsoft-docs@microsoft-docs-marketplace": true,
+    "code-review@claude-plugins-official": true
   }
 }
