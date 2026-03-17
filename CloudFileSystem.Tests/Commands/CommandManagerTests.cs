@@ -110,6 +110,7 @@ public class CommandManagerTests
         }
 
         public void Execute() => ExecuteCount++;
+
         public void Undo() => UndoCount++;
     }
 }

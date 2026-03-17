@@ -211,12 +211,15 @@ public class CloudFileSystemCliTests
     {
         var (console, cli) = CreateCli(
             "tag 個人筆記 (Personal_Notes)/待辦清單.txt Urgent",
-            "display");
+            "display"
+        );
 
         cli.Start();
 
         console.Output.Should().Contain("Tagged 待辦清單.txt as Urgent");
-        console.Output.Should().Contain("待辦清單.txt [純文字檔] (編碼: UTF-8, 大小: 1KB) {Urgent}");
+        console
+            .Output.Should()
+            .Contain("待辦清單.txt [純文字檔] (編碼: UTF-8, 大小: 1KB) {Urgent}");
     }
 
     [Fact]
@@ -224,7 +227,8 @@ public class CloudFileSystemCliTests
     {
         var (console, cli) = CreateCli(
             "tag 個人筆記 (Personal_Notes)/2025備份 (Archive_2025)/舊會議記錄.docx Work",
-            "display");
+            "display"
+        );
 
         cli.Start();
 
@@ -235,9 +239,7 @@ public class CloudFileSystemCliTests
     [Fact]
     public void Start_DeleteNestedFile_RemovesViaPath()
     {
-        var (console, cli) = CreateCli(
-            "delete 個人筆記 (Personal_Notes)/待辦清單.txt",
-            "display");
+        var (console, cli) = CreateCli("delete 個人筆記 (Personal_Notes)/待辦清單.txt", "display");
 
         cli.Start();
 
@@ -253,7 +255,8 @@ public class CloudFileSystemCliTests
         var (console, cli) = CreateCli(
             "copy 個人筆記 (Personal_Notes)/待辦清單.txt",
             "paste",
-            "display");
+            "display"
+        );
 
         cli.Start();
 
@@ -266,7 +269,8 @@ public class CloudFileSystemCliTests
     {
         var (console, cli) = CreateCli(
             "tag 個人筆記 (Personal_Notes)/2025備份 (Archive_2025) Personal",
-            "display");
+            "display"
+        );
 
         cli.Start();
 
@@ -277,8 +281,7 @@ public class CloudFileSystemCliTests
     [Fact]
     public void Start_InvalidPath_PrintsNotFound()
     {
-        var (console, cli) = CreateCli(
-            "tag 不存在的目錄/file.txt Urgent");
+        var (console, cli) = CreateCli("tag 不存在的目錄/file.txt Urgent");
 
         cli.Start();
 
@@ -291,7 +294,8 @@ public class CloudFileSystemCliTests
         var (console, cli) = CreateCli(
             "copy README.txt",
             "paste 專案文件 (Project_Docs)",
-            "display");
+            "display"
+        );
 
         cli.Start();
 
@@ -300,8 +304,11 @@ public class CloudFileSystemCliTests
         var display = console.Output[console.Output.LastIndexOf("根目錄 (Root)\n")..];
         var lines = display.Split('\n');
         var projectDocsIndex = Array.FindIndex(lines, l => l.Contains("專案文件 (Project_Docs)"));
-        var readmeUnderProject = Array.FindIndex(lines, projectDocsIndex + 1,
-            l => l.Contains("README.txt") && l.Contains("│"));
+        var readmeUnderProject = Array.FindIndex(
+            lines,
+            projectDocsIndex + 1,
+            l => l.Contains("README.txt") && l.Contains("│")
+        );
         readmeUnderProject.Should().BeGreaterThan(projectDocsIndex);
     }
 
@@ -311,7 +318,8 @@ public class CloudFileSystemCliTests
         var (console, cli) = CreateCli(
             "copy README.txt",
             "paste 個人筆記 (Personal_Notes)/2025備份 (Archive_2025)",
-            "display");
+            "display"
+        );
 
         cli.Start();
 
@@ -321,10 +329,7 @@ public class CloudFileSystemCliTests
     [Fact]
     public void Start_PasteWithoutPath_PastesToRoot()
     {
-        var (console, cli) = CreateCli(
-            "copy README.txt",
-            "paste",
-            "display");
+        var (console, cli) = CreateCli("copy README.txt", "paste", "display");
 
         cli.Start();
 
@@ -335,9 +340,7 @@ public class CloudFileSystemCliTests
     [Fact]
     public void Start_PasteToNonDirectory_PrintsError()
     {
-        var (console, cli) = CreateCli(
-            "copy README.txt",
-            "paste README.txt");
+        var (console, cli) = CreateCli("copy README.txt", "paste README.txt");
 
         cli.Start();
 
@@ -347,9 +350,7 @@ public class CloudFileSystemCliTests
     [Fact]
     public void Start_PasteToInvalidPath_PrintsError()
     {
-        var (console, cli) = CreateCli(
-            "copy README.txt",
-            "paste 不存在的目錄");
+        var (console, cli) = CreateCli("copy README.txt", "paste 不存在的目錄");
 
         cli.Start();
 

@@ -74,10 +74,12 @@ public class Directory : FileSystemComponent
         {
             SortBy.Name => (a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal),
             SortBy.Size => (a, b) => a.GetSize().CompareTo(b.GetSize()),
-            SortBy.Extension => (a, b) => string.Compare(
-                Path.GetExtension(a.Name),
-                Path.GetExtension(b.Name),
-                StringComparison.Ordinal),
+            SortBy.Extension => (a, b) =>
+                string.Compare(
+                    Path.GetExtension(a.Name),
+                    Path.GetExtension(b.Name),
+                    StringComparison.Ordinal
+                ),
             _ => throw new ArgumentOutOfRangeException(nameof(sortBy)),
         };
 

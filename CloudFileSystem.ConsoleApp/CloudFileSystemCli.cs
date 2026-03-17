@@ -318,7 +318,8 @@ public class CloudFileSystemCli
         foreach (var segment in segments)
         {
             current = searchIn.FirstOrDefault(c =>
-                c.Name.Equals(segment, StringComparison.Ordinal));
+                c.Name.Equals(segment, StringComparison.Ordinal)
+            );
             if (current == null)
             {
                 _console.WriteError($"Not found: {nameOrPath}");
@@ -357,7 +358,6 @@ public class CloudFileSystemCli
 
     private static bool TryParseTag(string value, out Tag tag)
     {
-        return Enum.TryParse(value, ignoreCase: true, out tag)
-               && Enum.IsDefined(tag);
+        return Enum.TryParse(value, ignoreCase: true, out tag) && Enum.IsDefined(tag);
     }
 }

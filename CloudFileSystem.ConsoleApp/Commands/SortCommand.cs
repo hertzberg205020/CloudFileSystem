@@ -40,7 +40,8 @@ public class SortCommand : ICommand
     }
 
     private static Dictionary<Directory, List<FileSystemComponent>> SnapshotOrder(
-        Directory directory)
+        Directory directory
+    )
     {
         var snapshot = new Dictionary<Directory, List<FileSystemComponent>>
         {

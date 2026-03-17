@@ -21,9 +21,7 @@ public class SortCommandTests
 
         command.Execute();
 
-        dir.Children.Select(c => c.Name)
-            .Should()
-            .ContainInOrder("a.txt", "b.txt", "c.txt");
+        dir.Children.Select(c => c.Name).Should().ContainInOrder("a.txt", "b.txt", "c.txt");
     }
 
     [Fact]
@@ -38,9 +36,7 @@ public class SortCommandTests
         command.Execute();
         command.Undo();
 
-        dir.Children.Select(c => c.Name)
-            .Should()
-            .ContainInOrder("c.txt", "a.txt", "b.txt");
+        dir.Children.Select(c => c.Name).Should().ContainInOrder("c.txt", "a.txt", "b.txt");
     }
 
     [Fact]

@@ -33,9 +33,7 @@ public class DirectorySortTests
 
         dir.Sort(SortBy.Name, SortOrder.Desc);
 
-        dir.Children.Select(c => c.Name)
-            .Should()
-            .ContainInOrder("charlie.txt", "alpha.txt");
+        dir.Children.Select(c => c.Name).Should().ContainInOrder("charlie.txt", "alpha.txt");
     }
 
     [Fact]
@@ -63,9 +61,7 @@ public class DirectorySortTests
 
         dir.Sort(SortBy.Extension, SortOrder.Asc);
 
-        dir.Children.Select(c => c.Name)
-            .Should()
-            .ContainInOrder("doc.docx", "img.png", "file.txt");
+        dir.Children.Select(c => c.Name).Should().ContainInOrder("doc.docx", "img.png", "file.txt");
     }
 
     [Fact]
@@ -110,9 +106,7 @@ public class DirectorySortTests
         // 子目錄（ext ""）在前，.txt 在後
         root.Children[0].Should().BeSameAs(sub);
         // 子目錄內部也應遞迴排序：.docx 在前、.txt 在後
-        sub.Children.Select(c => c.Name)
-            .Should()
-            .ContainInOrder("a.docx", "z.txt");
+        sub.Children.Select(c => c.Name).Should().ContainInOrder("a.docx", "z.txt");
     }
 
     [Fact]
@@ -126,9 +120,7 @@ public class DirectorySortTests
 
         root.Sort(SortBy.Name, SortOrder.Asc);
 
-        sub.Children.Select(c => c.Name)
-            .Should()
-            .ContainInOrder("alpha.txt", "charlie.txt");
+        sub.Children.Select(c => c.Name).Should().ContainInOrder("alpha.txt", "charlie.txt");
     }
 
     [Fact]
@@ -142,9 +134,7 @@ public class DirectorySortTests
 
         root.Sort(SortBy.Size, SortOrder.Desc);
 
-        sub.Children.Select(c => c.Name)
-            .Should()
-            .ContainInOrder("big.txt", "small.txt");
+        sub.Children.Select(c => c.Name).Should().ContainInOrder("big.txt", "small.txt");
     }
 
     [Fact]
@@ -162,8 +152,6 @@ public class DirectorySortTests
         dir.Sort(SortBy.Size, SortOrder.Desc);
         dir.SetChildrenOrder(originalOrder);
 
-        dir.Children.Select(ch => ch.Name)
-            .Should()
-            .ContainInOrder("a.txt", "b.txt", "c.txt");
+        dir.Children.Select(ch => ch.Name).Should().ContainInOrder("a.txt", "b.txt", "c.txt");
     }
 }
