@@ -1,3 +1,4 @@
+using System.Text;
 using CloudFileSystem.ConsoleApp.Commands;
 using CloudFileSystem.ConsoleApp.Models;
 using CloudFileSystem.ConsoleApp.Visitors;
@@ -374,5 +375,45 @@ public class CloudFileSystemCli
     private static bool TryParseTag(string value, out Tag tag)
     {
         return Enum.TryParse(value, ignoreCase: true, out tag) && Enum.IsDefined(tag);
+    }
+
+    /// <summary>
+    /// 將使用者輸入拆解為 token 陣列，支援雙引號包裹含空白的名稱。
+    /// </summary>
+    /// <remarks>
+    /// <para>雙引號內的空白不分割，引號本身被移除。</para>
+    /// <para>未閉合引號會吃到字串結尾（graceful degradation）。</para>
+    /// <para>空 token 被丟棄，與 <c>StringSplitOptions.RemoveEmptyEntries</c> 行為一致。</para>
+    /// </remarks>
+    internal static string[] Tokenize(string input)
+    {
+        var tokens = new List<string>();
+        var current = new StringBuilder();
+        var inQuotes = false;
+
+        foreach (var ch in input)
+        {
+            if (ch == '"')
+            {
+                inQuotes = !inQuotes;
+            }
+            else if (ch == ' ' && !inQuotes)
+            {
+                if (current.Length > 0)
+                {
+                    tokens.Add(current.ToString());
+                    current.Clear();
+                }
+            }
+            else
+            {
+                current.Append(ch);
+            }
+        }
+
+        if (current.Length > 0)
+            tokens.Add(current.ToString());
+
+        return tokens.ToArray();
     }
 }
