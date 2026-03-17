@@ -46,4 +46,44 @@ public class FileSystemComponentValidationTests
 
         copy.Tags.Should().Contain(Tag.Urgent);
     }
+
+    [Fact]
+    public void Name_SetNull_ThrowsArgumentException()
+    {
+        var dir = new Directory("valid");
+
+        var act = () => dir.Name = null!;
+
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Name_SetEmpty_ThrowsArgumentException()
+    {
+        var dir = new Directory("valid");
+
+        var act = () => dir.Name = "";
+
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Name_SetWhitespace_ThrowsArgumentException()
+    {
+        var dir = new Directory("valid");
+
+        var act = () => dir.Name = "   ";
+
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
+    public void Name_SetValidValue_UpdatesName()
+    {
+        var dir = new Directory("old");
+
+        dir.Name = "new";
+
+        dir.Name.Should().Be("new");
+    }
 }

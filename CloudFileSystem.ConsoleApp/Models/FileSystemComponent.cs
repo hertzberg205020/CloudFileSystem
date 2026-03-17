@@ -18,9 +18,10 @@ public abstract class FileSystemComponent
     /// 初始化 <see cref="FileSystemComponent"/> 的新執行個體。
     /// </summary>
     /// <param name="name">元件的顯示名稱。</param>
+    private string _name = null!;
+
     protected FileSystemComponent(string name)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
         Name = name;
     }
 
@@ -28,7 +29,15 @@ public abstract class FileSystemComponent
     /// 取得此元件的顯示名稱，不包含路徑。
     /// </summary>
     /// <value>檔案或目錄的名稱，例如 <c>"需求規格書.docx"</c> 或 <c>"專案文件 (Project_Docs)"</c>。</value>
-    public string Name { get; internal set; }
+    public string Name
+    {
+        get => _name;
+        internal set
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(value);
+            _name = value;
+        }
+    }
 
     /// <summary>
     /// 取得或設定此元件的父目錄。
