@@ -52,10 +52,10 @@ CloudFileSystem/
 
 萃取出的名詞需進一步篩選——並非所有名詞都是類別，有些是類別的屬性：
 
-| 分類 | 名詞 | 判斷依據 |
-| ---- | ---- | -------- |
-| **類別候選** | Word 文件、圖片、純文字檔、目錄 | 具有獨立行為與狀態，能作為操作對象 |
-| **屬性候選** | 檔名、大小、建立時間、頁數、解析度（寬/高）、編碼 | 描述某個類別的特徵，不能獨立存在 |
+| 分類         | 名詞                                              | 判斷依據                           |
+| ------------ | ------------------------------------------------- | ---------------------------------- |
+| **類別候選** | Word 文件、圖片、純文字檔、目錄                   | 具有獨立行為與狀態，能作為操作對象 |
+| **屬性候選** | 檔名、大小、建立時間、頁數、解析度（寬/高）、編碼 | 描述某個類別的特徵，不能獨立存在   |
 
 類別候選在後續 2.2 節推導為領域模型中的類別；屬性候選則歸入對應類別成為其欄位。
 
@@ -119,12 +119,12 @@ FileSystemComponent（抽象父類別）
 
 | 操作         | 說明                             | 驅動的設計需求                           |
 | ------------ | -------------------------------- | ---------------------------------------- |
-| 顯示樹狀結構 | 以 Box-drawing 字元渲染完整樹    | 需遍歷整棵樹，且格式化邏輯不應寫在模型中 |
-| 計算容量     | 遞迴加總指定目錄下所有檔案大小   | 需遍歷整棵子樹 + 輸出 Traverse Log       |
-| 搜尋         | 依副檔名篩選，列出符合的檔案路徑 | 需遍歷整棵樹 + 輸出 Traverse Log         |
-| XML 輸出     | 將結構序列化為 XML 格式          | 需遍歷整棵樹，且序列化邏輯不應寫在模型中 |
+| 顯示樹狀結構 | 以 Box-drawing 字元渲染完整樹    | 需走訪整棵樹，且格式化邏輯不應寫在模型中 |
+| 計算容量     | 遞迴加總指定目錄下所有檔案大小   | 需走訪整棵子樹 + 輸出 Traverse Log       |
+| 搜尋         | 依副檔名篩選，列出符合的檔案路徑 | 需走訪整棵樹 + 輸出 Traverse Log         |
+| XML 輸出     | 將結構序列化為 XML 格式          | 需走訪整棵樹，且序列化邏輯不應寫在模型中 |
 
-**共同特徵**：都需要遍歷樹、都是在結構上執行不同的「操作」、都不應讓模型類別承擔格式化責任。
+**共同特徵**：都需要走訪樹的節點、都是在結構上執行不同的「操作」、都不應讓模型類別承擔格式化責任。
 → 這驅動了 **Visitor Pattern** 的選用。
 
 #### 狀態修改操作（修改結構，需 undo/redo）
@@ -144,238 +144,208 @@ FileSystemComponent（抽象父類別）
 複製/貼上需要產生**完全獨立的副本**。由於目錄可無限嵌套，拷貝必須遞迴處理整棵子樹，且每個元件自行負責自己的克隆邏輯。
 → 這驅動了 **Prototype Pattern** 的選用。
 
-**小結**：OOA 階段識別的三個核心問題——「統一操作遞迴結構」、「解耦遍歷操作與資料結構」、「可復原的突變操作」——分別對應了 Composite、Visitor、Command 三個設計模式的選用，再加上深拷貝需求引入的 Prototype，構成了本專案的四個設計模式。
+**小結**：OOA 階段識別的三個核心問題——「統一操作遞迴結構」、「解耦走訪操作與資料結構」、「可復原的突變操作」——分別對應了 Composite、Visitor、Command 三個設計模式的選用，再加上深拷貝需求引入的 Prototype，構成了本專案的四個設計模式。
 
 ---
 
-## 三、物件導向設計（OOD）— 設計模式的選型與核心邏輯
+## 三、物件導向設計（OOD）— 以 Pattern 框架推導設計結構
 
-以「**需求驅動設計**」為主軸，說明每個模式**為什麼被選中**、**解決什麼 OOA 階段識別的問題**、以及**角色如何對應到類別**。
+本章以 **Pattern 框架**（Context → Forces → Problem → Solution → Resulting Context）為敘事結構，搭配**依賴反轉之重構三步驟**（封裝變動之處 → 萃取共同行為 → 委派/複合）推導每個設計模式的設計結構。四個模式之間以 Resulting Context → Context 的銜接形成連續的設計推導鏈。
 
 > 參照 OOD 圖：[`docs/OOD/ood-basic.jpg`](OOD/ood-basic.jpg)、[`docs/OOD/ood-bonus.jpg`](OOD/ood-bonus.jpg)
 > 參照 UML 類別圖：[`spec/class-diagram.md`](../spec/class-diagram.md)
 
 ### 3.1 Composite Pattern — 遞迴樹狀結構的統一操作
 
-**OOA 問題**：目錄可無限嵌套，且目錄與檔案需被統一操作（遍歷、刪除、複製）。
+#### Context
 
-**模式選型理由**：Composite 讓 Client 不需區分葉節點（File）與組合節點（Directory），以統一介面操作整棵樹。
+OOA 階段識別出目錄與檔案構成遞迴樹狀結構——目錄可無限嵌套子目錄，且多種操作（顯示、刪除、複製、計算大小）需統一作用於目錄和檔案。領域模型已建立（`FileSystemComponent` → `Directory` / `File` → 三種具體檔案類型），但尚未定義結構的擴充策略。
 
-**角色對應**：
+#### Forces
 
-| GoF 角色 | 本專案類別 | 職責 |
-| -------- | ---------- | ---- |
-| Component | `FileSystemComponent` | 抽象基底：定義 `Name`、`GetSize()`、`Accept()`、`DeepCopy()` 統一介面 |
-| Composite | `Directory` | 持有 `List<FileSystemComponent> _children`，實作 `Add`/`Remove`/遞迴 `GetSize` |
-| Leaf | `File`（abstract）→ `WordDocument`, `ImageFile`, `TextFile` | `GetSize()` 回傳自身 `Size`，`DeepCopy()` 複製自身屬性 |
+- **高結構複雜度（High Structural Complexity）**：結構中存在遞迴自我關聯（Self Association），目錄的 children 可以是檔案也可以是子目錄，形成無限深度的樹狀結構。外部操作若需區分目錄與檔案分別處理，邏輯將極度複雜。
+- **結構變動性（Structural Variation）**：未來需求可能需要支援新的檔案類型（如 PDF、音訊檔）。若每新增一種檔案類型就需修改操作端程式碼，維護成本隨類型數量線性增長。
+- **開放封閉原則（OCP）**：擴充新的檔案類型時，應有最少的修改成本——理想狀態是只加新類別，不改既有程式碼。
 
-**核心邏輯**：
+#### Problem
 
-- **Parent 自動維護**：`Add()` 設定子元件的 `Parent` 為此目錄，`Remove()` 清除為 `null`。外部無法直接設定 `Parent`（`internal set`），確保關係一致性。
-- **對外唯讀**：`Children` 屬性型別為 `IReadOnlyList<FileSystemComponent>`，內部操作僅透過 `Add`/`Remove`/`Insert` 方法。
-- **遞迴加總**：`Directory.GetSize()` 以 `_children.Sum(c => c.GetSize())` 遞迴累加，體現 Composite 的核心遞迴結構。
-- **防禦性設計**：`IsAncestorOf()` 防止循環參照（將祖先加為自己的子元件）；`IndexOf()` 支援 `DeleteCommand` 記錄精確位置以便 undo 還原。
+如何讓 CloudFileSystem 的樹狀結構有良好的擴充性？並且在擴充時不影響到 CLI 類別的程式？
 
-### 3.2 Visitor Pattern — 將遍歷操作與資料結構解耦
+#### Solution — 依賴反轉之重構三步驟
 
-**OOA 問題**：四種唯讀操作（顯示、計算大小、搜尋、XML 輸出）若直接寫在模型類別中，每新增一種操作就要修改所有元件類別，違反開放封閉原則（OCP）。
-
-**模式選型理由**：Visitor 透過雙重分派（Double Dispatch），讓新操作只需新增 Visitor 類別，無需修改現有元件結構。
+1. **封裝變動之處**：將各檔案類型（WordDocument、ImageFile、TextFile）和目錄（Directory）各自封裝為獨立類別，隱藏各自的專屬屬性與行為。每個類別只暴露外部需要的介面，內部實作細節不可見。
+2. **萃取共同行為**：識別所有元件的共同行為（`GetSize()`、`Accept()`、`DeepCopy()`）與共同屬性（`Name`、`Parent`），萃取為抽象基底類別 `FileSystemComponent`。
+3. **委派/複合**：Directory 持有 `List<FileSystemComponent>`（Composition），透過 Component 抽象管理子元件。CLI 透過 `FileSystemComponent` 抽象操作整棵樹，不需知道具體型別 → **依賴反轉**：CLI 不依賴具體檔案類別，而是依賴抽象的 `FileSystemComponent`。
 
 **角色對應**：
 
-| GoF 角色 | 本專案類別 | 職責 |
-| -------- | ---------- | ---- |
-| Visitor | `IFileSystemVisitor` | 定義 `Visit()` overloads：`Directory`、`WordDocument`、`ImageFile`、`TextFile` |
-| ConcreteVisitor | `DisplayVisitor`, `SizeCalculatorVisitor`, `SearchByExtensionVisitor`, `XmlExportVisitor` | 各自實作一種遍歷操作 |
-| Element | `FileSystemComponent` | 定義 `abstract Accept(IFileSystemVisitor)` |
-| ConcreteElement | `Directory`, `WordDocument`, `ImageFile`, `TextFile` | 實作 `Accept()` → 呼叫 `visitor.Visit(this)` |
+| GoF 角色  | 本專案類別                                                  | 職責                             |
+| --------- | ----------------------------------------------------------- | -------------------------------- |
+| Component | `FileSystemComponent`                                       | 抽象基底：定義所有元件的統一介面 |
+| Composite | `Directory`                                                 | 持有子元件清單，實作遞迴操作     |
+| Leaf      | `File`（abstract）→ `WordDocument`, `ImageFile`, `TextFile` | 葉節點，不含子元件               |
 
-**核心邏輯——雙重分派機制**：
+#### Resulting Context
 
-```txt
-Client                    Element                   Visitor
-  │                         │                         │
-  ├─ component.Accept(v) ──→│                         │
-  │    第一次分派：          │                         │
-  │    由元件的實際型別      │── visitor.Visit(this) ──→│
-  │    決定進入哪個 Accept   │    第二次分派：          │
-  │                         │    由 Visit overload     │
-  │                         │    決定操作邏輯          │
-```
+- **好處**：CLI 以統一介面操作整棵樹，新增檔案類型只需加子類別，不影響 CLI 及其他既有程式碼。
+- **取捨**：Leaf 繼承了 Component 的所有介面，部分方法（如 `Add`/`Remove`）對 Leaf 無意義，需在設計上處理這個語意落差。
+- **銜接**：Composite 結構建立後，需要在結構上執行多種不同的操作（顯示、計算大小、搜尋、XML 輸出）。若將這些操作邏輯直接寫在各 Element 類別中，每新增一種操作就必須修改所有 Element 類別 → 引出 **Visitor Pattern**。
 
-- **第一次分派**：Client 呼叫 `component.Accept(visitor)` → 由元件的**實際型別**決定進入哪個 `Accept` 實作
-- **第二次分派**：`Accept` 內部呼叫 `visitor.Visit(this)` → 由 `Visit` 的 overload 決定操作邏輯
-- **樹走訪**：`Directory.Accept()` 先呼叫 `visitor.Visit(this)` 處理自身，再遞迴呼叫每個 child 的 `Accept`
+### 3.2 Visitor Pattern — 將走訪操作與資料結構解耦
 
-**四個 Visitor 的職責**：
+#### Context
 
-| Visitor | 功能 | 實作要點 |
-| ------- | ---- | -------- |
-| `DisplayVisitor` | 以 Box-drawing 字元渲染樹狀結構 | 以 `List<bool> _isLast` 追蹤每層是否為最後一個子元件，決定使用 `├──` 或 `└──` |
-| `SizeCalculatorVisitor` | 遞迴累加檔案大小 | 走訪時輸出 Traverse Log（`Visiting: {path}`），結果存於 `TotalSize` 屬性 |
-| `SearchByExtensionVisitor` | 依副檔名篩選檔案 | 走訪時輸出 Traverse Log，符合的路徑收集至 `Results` 清單 |
-| `XmlExportVisitor` | 將結構序列化為 XML | 以 `_indentLevel` 追蹤縮排深度，`SanitizeTagName()` 處理中文名稱為合法 XML 標籤 |
+Composite 結構已建立，現在需要對此結構執行多種唯讀操作（顯示、計算大小、搜尋、XML 輸出），且這些操作未來會持續擴充。問題在於：這些操作的邏輯應該放在哪裡？
+
+#### Forces
+
+- **操作變動性（Operational Variation）**：需要對結構中的元素執行多種不同操作（顯示結構、XML 輸出、計算大小含 Traverse Log、搜尋含 Traverse Log），且未來會持續擴充新操作。每種操作對不同元件類型有不同的處理邏輯。
+- **維護性（Maintainability）**：若將每種操作的邏輯直接寫在各 Element 類別中，每新增一種操作就必須修改所有 Element 類別。操作邏輯被分散在不同 Element 中，難以集中維護，破壞了程式的可讀性與維護性。
+- **開放封閉原則（OCP）**：擴充新操作時，不必修改任何既有的 Element 類別程式碼。既有的 Element 類別應該對擴充開放，但對修改關閉。
+
+#### Problem
+
+如何讓開發人員能夠持續對物件結構中的各類元素擴充新的操作，並且將每一種操作的邏輯集中封裝在同一個類別中，而完全不必修改既有的核心結構 Element 類別？
+
+#### Solution — 依賴反轉之重構三步驟
+
+1. **封裝變動之處**：將每種操作的邏輯從 Element 類別中抽離，各自封裝為獨立的 Visitor 類別（`DisplayVisitor`、`SizeCalculatorVisitor`、`SearchByExtensionVisitor`、`XmlExportVisitor`）。每個 Visitor 集中管理一種操作對所有元件類型的處理邏輯。
+2. **萃取共同行為**：識別所有 Visitor 的共同行為——對各種 Element 執行 Visit，萃取為 `IFileSystemVisitor` 介面，定義針對每種 Element 類型的 `Visit()` overload。
+3. **委派**：Element 透過 `Accept(IFileSystemVisitor)` 將操作委派給外部 Visitor。`Accept` 內部呼叫 `visitor.Visit(this)` 形成**雙重分派（Double Dispatch）**——第一次分派由元件的實際型別決定進入哪個 `Accept` 實作，第二次分派由 `Visit` 的 overload 決定操作邏輯 → **依賴反轉**：Element 不依賴具體操作，而是依賴 Visitor 抽象。
+
+**角色對應**：
+
+| GoF 角色        | 本專案類別                                                                                | 職責                                       |
+| --------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Visitor         | `IFileSystemVisitor`                                                                      | 定義對各種 Element 的 `Visit()` overloads  |
+| ConcreteVisitor | `DisplayVisitor`, `SizeCalculatorVisitor`, `SearchByExtensionVisitor`, `XmlExportVisitor` | 各自封裝一種走訪操作的完整邏輯             |
+| Element         | `FileSystemComponent`                                                                     | 定義 `abstract Accept(IFileSystemVisitor)` |
+| ConcreteElement | `Directory`, `WordDocument`, `ImageFile`, `TextFile`                                      | 實作 `Accept()`，將自身分派給 Visitor      |
+
+**四個 Visitor 的功能**：
+
+| Visitor                    | 功能                                      |
+| -------------------------- | ----------------------------------------- |
+| `DisplayVisitor`           | 以 Box-drawing 字元 render 樹狀結構       |
+| `SizeCalculatorVisitor`    | 遞迴累加檔案大小，走訪時輸出 Traverse Log |
+| `SearchByExtensionVisitor` | 依副檔名篩選檔案，走訪時輸出 Traverse Log |
+| `XmlExportVisitor`         | 將結構序列化為 XML 格式                   |
+
+#### Resulting Context
+
+- **好處**：新增操作只需加 Visitor 類別，不修改任何 Element；每種操作的邏輯集中在單一類別中，易於維護。
+- **取捨**：新增 Element 類型時需修改所有 Visitor（加 `Visit` overload）。但本系統中元件類型穩定，操作種類更可能擴增，Visitor 改善了正確的變動方向。
+- **銜接**：Visitor 處理唯讀操作，但系統還需支援狀態修改操作（刪除、貼上、排序、標籤/取消標籤），且這些操作需支援 undo/redo。每個操作的逆邏輯各不相同，需要統一的抽象來管理 → 引出 **Command Pattern**。
 
 ### 3.3 Command Pattern — 可復原的狀態修改操作管理
 
-**OOA 問題**：刪除、貼上、排序、標籤操作需支援 undo/redo，且操作歷史需有序管理。
+#### Context
 
-**模式選型理由**：Command 將每個狀態修改操作封裝為物件，記錄執行前狀態以支援反向操作。
+系統除了 Visitor 處理的唯讀操作外，還需支援狀態修改操作（刪除、貼上、排序、標籤/取消標籤），且所有狀態修改操作需支援 undo/redo。設計決策上，唯讀操作直接透過 Visitor 執行，不進入歷史管理；狀態修改操作則需要統一的歷史追蹤機制。
+
+#### Forces
+
+- **操作可逆性（Operation Reversibility）**：使用者需要對已執行的操作進行復原與重做，而每個操作的逆邏輯各不相同（delete 的逆是 insert-back、sort 的逆是還原原始順序、tag 的逆是 untag），必須有統一的抽象來封裝這些差異。
+- **操作歷史追蹤（History Tracking）**：Undo/Redo 需要維護有序的操作歷史，支援任意深度的連續復原與重做。若沒有統一的 Command 抽象，歷史管理器無法以泛用方式管理不同類型的操作。
+
+#### Problem
+
+如何將各種改變狀態的操作及其逆操作封裝為統一的抽象，使歷史管理機制能以泛用方式管理任意操作的執行、復原與重做？
+
+#### Solution — 依賴反轉之重構三步驟
+
+1. **封裝變動之處**：將每個狀態修改操作（Delete、Paste、Sort、Tag、Untag）及其逆操作各自封裝為獨立的 Command 物件。每個 Command 自行負責保存執行前狀態以支援 Undo。
+2. **萃取共同行為**：識別所有 Command 的共同能力（`Execute()` + `Undo()`），萃取為 `ICommand` 介面。
+3. **委派**：CLI（Client）建立具體 Command 後交給 `CommandManager`（Invoker）。Invoker 只依賴 `ICommand` 介面，透過雙 Stack 管理執行/復原/重做 → **依賴反轉**：Invoker 不依賴具體操作類別，而是依賴 `ICommand` 抽象。
 
 **角色對應**：
 
-| GoF 角色 | 本專案類別 | 職責 |
-| -------- | ---------- | ---- |
-| Command | `ICommand` | 介面：`Execute()`、`Undo()`、`Description` |
-| ConcreteCommand | `DeleteCommand`, `PasteCommand`, `SortCommand`, `TagCommand`, `UntagCommand` | 各自封裝一種操作與其逆操作 |
-| Invoker | `CommandManager` | 持有雙 Stack 管理 undo/redo 歷史 |
-| Client | `CloudFileSystemCli` | 建立對應 Command 物件，交給 `CommandManager` 執行 |
-| Receiver | `Directory`, `FileSystemComponent` | 實際被操作的領域物件 |
+| GoF 角色        | 本專案類別                                                                   | 職責                                  |
+| --------------- | ---------------------------------------------------------------------------- | ------------------------------------- |
+| Command         | `ICommand`                                                                   | 定義 `Execute()` 與 `Undo()` 統一介面 |
+| ConcreteCommand | `DeleteCommand`, `PasteCommand`, `SortCommand`, `TagCommand`, `UntagCommand` | 各自封裝一種操作與其逆操作            |
+| Invoker         | `CommandManager`                                                             | 持有雙 Stack，管理 undo/redo 歷史     |
+| Client          | `CloudFileSystemCli`                                                         | 建立 Command 物件，交給 Invoker 執行  |
+| Receiver        | `Directory`, `FileSystemComponent`                                           | 實際被操作的領域物件                  |
 
-**核心邏輯——雙 Stack 狀態機**：
+#### Resulting Context
 
-```txt
-Execute(cmd)：cmd.Execute() → push undoStack → clear redoStack
-Undo()：      pop undoStack → cmd.Undo() → push redoStack
-Redo()：      pop redoStack → cmd.Execute() → push undoStack
-```
-
-任何新的 `Execute` 都會清空 `redoStack`，確保不會在分叉的歷史線上重做。
-
-**五個 Command 的狀態保存策略**：
-
-| Command | Execute | Undo | 狀態保存 |
-| ------- | ------- | ---- | -------- |
-| `DeleteCommand` | `_parent.Remove(_component)` | `_parent.Insert(_originalIndex, _component)` | 建構時記錄 `_originalIndex`，精確還原位置 |
-| `PasteCommand` | 首次時 `_clipboard.DeepCopy()` 產生 `_cloned` 後 `_target.Add(_cloned)` | `_target.Remove(_cloned)` | Redo 重用同一 `_cloned`，避免重複深拷貝 |
-| `SortCommand` | `_directory.Sort(_sortBy, _sortOrder)` | 遍歷 `_originalOrders` 呼叫 `SetChildrenOrder()` | 建構時 `SnapshotOrder()` 遞迴快照整棵子樹的順序 |
-| `TagCommand` | `_component.AddTag(_tag)` | `_component.RemoveTag(_tag)` | 操作本身即為互逆 |
-| `UntagCommand` | `_component.RemoveTag(_tag)` | `_component.AddTag(_tag)` | 操作本身即為互逆 |
-
-**設計決策——唯讀 vs 狀態修改的分界**：
-
-- **唯讀操作**（display, size, search, xml）：直接透過 Visitor 執行，不進入 `CommandManager`
-- **狀態修改操作**（delete, paste, sort, tag, untag）：一律透過 `CommandManager`，確保 undo/redo 歷史完整
-
-這個分界在 `CloudFileSystemCli.ExecuteCommand()` 中清楚體現：唯讀指令直接建立 Visitor 並呼叫 `Accept()`；狀態修改指令建立 Command 物件後交給 `_commandManager.Execute()`。
+- **好處**：新增操作只需加 Command 類別即自動獲得 undo/redo 支援；Invoker 與 Receiver 完全解耦，歷史管理邏輯集中在 `CommandManager`。
+- **取捨**：每個 Command 需自行設計狀態保存策略（記錄哪些執行前狀態、如何還原），增加了各 Command 的實作責任。
+- **銜接**：`PasteCommand` 需要對 Composite 樹進行深拷貝以產生獨立副本（修改副本不影響原件）。由於 Directory 的 children 可能是任何子型別，且結構存在遞迴自我關聯與雙向參照，深拷貝邏輯不能由外部硬編碼 → 引出 **Prototype Pattern**。
 
 ### 3.4 Prototype Pattern — 樹狀結構的深拷貝
 
-**OOA 問題**：複製/貼上功能需產生完全獨立的副本，修改副本不影響原件，且需遞迴處理整棵子樹。
+#### Context
 
-**模式選型理由**：Prototype 讓每個元件自行負責克隆邏輯，避免外部程式碼了解內部結構細節。
+Command Pattern 的 `PasteCommand` 需要對 Composite 樹狀結構進行深拷貝，以產生完全獨立的副本（修改副本不影響原件）。問題在於：由誰負責拷貝、如何處理遞迴結構與雙向參照？
+
+#### Forces
+
+- **結構變動性（Structural Variation）**：Directory 的 children 是 `List<FileSystemComponent>`，可能是任何子型別（WordDocument、ImageFile、TextFile、Directory），每種子型別的建構參數各不相同。若由外部以 if/switch 判斷具體型別再建立副本，每次新增子型別都必須修改複製邏輯，違反 OCP。
+- **高結構複雜度（High Structural Complexity）**：FileSystemComponent 存在遞迴自我關聯——Directory 持有 `List<FileSystemComponent>` 且自身也是 FileSystemComponent，形成無限深度的樹狀結構。同時每個節點透過 `Parent` 屬性反向引用父節點，構成雙向參照。深拷貝時必須遞迴走訪整棵子樹，且新子樹內部的所有 `Parent` 必須正確指向新建立的父節點，而非原始結構中的節點。
+
+#### Problem
+
+如何在不知道具體型別的情況下，對 Composite 樹狀結構進行深拷貝，並確保拷貝後的子樹擁有正確的內部參照關係？
+
+#### Solution — 依賴反轉之重構三步驟
+
+1. **封裝變動之處**：讓每個 ConcretePrototype（Directory、WordDocument、ImageFile、TextFile）各自封裝自己的克隆邏輯，自行負責複製專屬屬性（如 PageCount、Width/Height、Encoding）與標籤。
+2. **萃取共同行為**：識別共同能力——自我複製，萃取為 `FileSystemComponent.DeepCopy()` 抽象方法。
+3. **委派**：`PasteCommand` 只呼叫 `clipboard.DeepCopy()`，由多型決定實際克隆行為 → **依賴反轉**：PasteCommand 不依賴具體檔案類別的建構邏輯，而是依賴 `FileSystemComponent` 的 `DeepCopy()` 抽象。
 
 **角色對應**：
 
-| GoF 角色 | 本專案類別 | 職責 |
-| -------- | ---------- | ---- |
-| Prototype | `FileSystemComponent` | 定義 `abstract DeepCopy()` |
-| ConcretePrototype | `Directory`, `WordDocument`, `ImageFile`, `TextFile` | 各自實作深拷貝邏輯 |
-| Client | `PasteCommand` | 呼叫 `_clipboard.DeepCopy()` 建立獨立副本 |
+| GoF 角色          | 本專案類別                                           | 職責                           |
+| ----------------- | ---------------------------------------------------- | ------------------------------ |
+| Prototype         | `FileSystemComponent`                                | 定義 `abstract DeepCopy()`     |
+| ConcretePrototype | `Directory`, `WordDocument`, `ImageFile`, `TextFile` | 各自實作完整的深拷貝邏輯       |
+| Client            | `PasteCommand`                                       | 呼叫 `DeepCopy()` 建立獨立副本 |
 
-**核心邏輯——遞迴深拷貝**：
+**設計決策——延遲拷貝**：`copy` 指令僅將參照存入剪貼簿，不觸發深拷貝；`paste` 時才呼叫 `DeepCopy()` 產生獨立副本，避免使用者 copy 後改變心意時付出不必要的成本。Redo 時重用首次產生的副本，避免重複深拷貝且確保名稱一致（含自動改名結果）。
 
-```txt
-Directory.DeepCopy()
-  ├── new Directory(Name)
-  ├── CopyTagsTo(copy)           ← 複製標籤
-  └── foreach child in _children
-      └── copy.Add(child.DeepCopy())  ← 遞迴深拷貝 + Add() 自動維護 Parent
-```
+#### Resulting Context
 
-- `Directory.DeepCopy()`：建立新 Directory → 遞迴呼叫每個 child 的 `DeepCopy()` → 透過 `Add()` 建立正確的 `Parent` 關係
-- `File` 子類別的 `DeepCopy()`：建立新實例，複製所有屬性（`Size`, `CreatedAt`, 型別專屬屬性如 `PageCount`）+ `CopyTagsTo()`
-
-**設計決策——延遲拷貝**：
-
-| 指令 | 行為 | 理由 |
-| ---- | ---- | ---- |
-| `copy` | 僅存參照到 `_clipboard` | 使用者可能 copy 後改變心意，不需立即付出深拷貝成本 |
-| `paste` | 呼叫 `DeepCopy()` 產生獨立副本 | 此時才確定要貼上，執行實際拷貝 |
-| `redo`（paste） | 重用首次產生的 `_cloned` | 避免重複深拷貝，且確保名稱一致（含自動改名） |
+- **好處**：新增檔案類型只需實作自己的 `DeepCopy()`，`PasteCommand` 完全不需修改。每個元件自行確保深拷貝的完整性，外部呼叫端無需了解內部結構。
+- **取捨**：每個 ConcretePrototype 需自行確保深拷貝的完整性（包含標籤、專屬屬性、遞迴子樹），若遺漏某個屬性將導致副本不完整。
 
 ---
 
 ## 四、模式協作全景
 
-以一次完整的「**複製目錄 → 貼到另一個目錄 → 顯示結果 → undo**」操作流程，串聯四個設計模式的協作：
+以一次完整的「**複製目錄 → 貼到另一個目錄 → 顯示結果 → undo**」操作流程，說明四個設計模式如何協作。每個步驟聚焦於「哪個模式負責什麼」。
 
 ### 步驟一：copy — 存參照
 
-```txt
-使用者輸入: copy 專案文件 (Project_Docs)
-
-CLI (Client)
- └── FindChild("專案文件 (Project_Docs)")
-      └── _clipboard = component        ← 僅存參照，不涉及任何 Pattern
-```
-
-此步驟不建立 Command（非狀態修改操作），不觸發深拷貝。
+使用者輸入 `copy 專案文件 (Project_Docs)`。CLI 在 Composite 結構中找到目標元件，將參照存入剪貼簿。此步驟不建立 Command（非狀態修改操作），不觸發深拷貝——這是延遲拷貝策略的體現。
 
 ### 步驟二：paste — Prototype + Command + Composite 協作
 
-```txt
-使用者輸入: paste 個人筆記 (Personal_Notes)
+使用者輸入 `paste 個人筆記 (Personal_Notes)`。三個模式在此步驟協作：
 
-CLI (Client)
- ├── new PasteCommand(target, _clipboard)     ← Command Pattern：封裝操作
- └── _commandManager.Execute(command)         ← Invoker 觸發
-      └── command.Execute()
-           ├── _clipboard.DeepCopy()          ← Prototype Pattern：遞迴深拷貝
-           │    └── Directory.DeepCopy()
-           │         ├── new Directory("專案文件 (Project_Docs)")
-           │         ├── child1.DeepCopy() → new WordDocument(...)
-           │         └── child2.DeepCopy() → new ImageFile(...)
-           ├── GenerateUniqueName()           ← 同名時自動改名
-           └── target.Add(_cloned)            ← Composite Pattern：加入樹結構
-                └── _cloned.Parent = target   ← 自動維護 Parent
-```
-
-- **Prototype** 負責產生獨立副本
-- **Composite** 的 `Add()` 將副本接入樹並維護 `Parent`
-- **Command** 的 `CommandManager` 將此操作推入 `_undoStack`
+1. **Command Pattern**：CLI 建立 `PasteCommand` 並交給 `CommandManager` 執行，操作被推入 undo 歷史
+2. **Prototype Pattern**：`PasteCommand.Execute()` 呼叫 `clipboard.DeepCopy()` 遞迴深拷貝整棵子樹，產生完全獨立的副本
+3. **Composite Pattern**：透過 `Directory.Add()` 將副本接入目標目錄的樹結構，自動維護 `Parent` 參照
 
 ### 步驟三：display — Visitor + Composite 協作
 
-```txt
-使用者輸入: display
+使用者輸入 `display`。兩個模式協作：
 
-CLI (Client)
- └── new DisplayVisitor()
-      └── _root.Accept(visitor)               ← Composite Pattern：統一介面
-           └── visitor.Visit(directory)        ← Visitor Pattern：雙重分派
-                ├── 輸出 "根目錄 (Root)"
-                └── foreach child.Accept(visitor)  ← 遞迴走訪整棵樹
-                     └── visitor.Visit(this)   ← 依實際型別 dispatch
-```
+1. **Composite Pattern**：提供統一的 `Accept()` 介面，CLI 不需區分目錄或檔案，對根節點呼叫 `Accept()` 即可
+2. **Visitor Pattern**：`DisplayVisitor` 透過雙重分派，針對不同元件類型輸出不同格式，遞迴走訪整棵樹
 
-- **Composite** 提供統一的 `Accept()` 介面，Client 不需區分目錄或檔案
-- **Visitor** 的雙重分派讓 `DisplayVisitor` 針對不同元件類型輸出不同格式
+此步驟為唯讀操作，直接透過 Visitor 執行，不進入 `CommandManager`。
 
 ### 步驟四：undo — Command 反向操作
 
-```txt
-使用者輸入: undo
-
-CLI (Client)
- └── _commandManager.Undo()
-      ├── pop _undoStack → PasteCommand
-      ├── command.Undo()
-      │    └── target.Remove(_cloned)          ← Composite：移除副本
-      │         └── _cloned.Parent = null
-      └── push _redoStack                      ← 保留以供 redo
-```
-
-- **Command** 的 `Undo()` 呼叫 `Remove()` 移除先前貼上的副本
-- **Composite** 的 `Remove()` 自動清除 `Parent` 關係
-- `_cloned` 仍保留在 `PasteCommand` 中，若之後 redo 可直接重用
+使用者輸入 `undo`。`CommandManager` 從 undo 歷史中取出 `PasteCommand`，呼叫其 `Undo()` 方法。`PasteCommand.Undo()` 透過 Composite 的 `Remove()` 將先前貼上的副本從樹結構中移除，`Parent` 關係自動清除。已移除的副本仍保留在 `PasteCommand` 中，若之後 redo 可直接重用，無需再次深拷貝。
 
 ---
 
 ## 五、總結
 
-### 從 OOA 到 OOD 的推導路徑
+### 從 OOA 到 OOD 的設計推導鏈
 
 ```txt
 需求訪談
@@ -384,24 +354,27 @@ CLI (Client)
  └── 操作分類（唯讀 vs 狀態修改）
       │
       ├── 「統一操作遞迴結構」 ──→ Composite Pattern
-      ├── 「解耦遍歷操作」    ──→ Visitor Pattern
+      │                              ↓ Resulting Context
+      ├── 「解耦走訪操作」    ──→ Visitor Pattern
+      │                              ↓ Resulting Context
       ├── 「可復原的操作」    ──→ Command Pattern
+      │                              ↓ Resulting Context
       └── 「深拷貝子樹」      ──→ Prototype Pattern
 ```
 
-每個設計模式的選用都可追溯到 OOA 階段識別的具體問題，而非先選定模式再套用。
+每個設計模式的選用都可追溯到 OOA 階段識別的具體問題，而非先選定模式再套用。四個模式之間以 Resulting Context → Context 的銜接，形成一條連續的設計推導鏈——前一個模式的結果自然引出下一個模式的問題。
 
 ### 設計取捨與權衡
 
-| 取捨 | 選擇 | 理由 |
-| ---- | ---- | ---- |
-| 簡潔性 vs 擴充性 | 偏向擴充性 | Visitor 讓新增操作不改現有類別；Command 讓新增操作類型自動獲得 undo/redo |
-| 延遲拷貝 vs 即時拷貝 | 延遲拷貝 | `copy` 僅存參照，`paste` 時才 `DeepCopy()`，避免不必要的成本 |
-| 唯讀/狀態修改分界 | 明確分開 | 唯讀走 Visitor，狀態修改走 Command，職責清晰且避免 undo 歷史膨脹 |
-| Visitor 的 OCP 取捨 | 接受新增元件類型需修改 Visitor | 元件類型穩定（檔案類型不常變）；操作種類更可能擴增，Visitor 優化了操作擴增的方向 |
+| 取捨                 | 選擇         | 理由                                                                             |
+| -------------------- | ------------ | -------------------------------------------------------------------------------- |
+| 簡潔性 vs 擴充性     | 偏向擴充性   | Visitor 讓新增操作不改現有類別；Command 讓新增操作自動獲得 undo/redo             |
+| 延遲拷貝 vs 即時拷貝 | 延遲拷貝     | `copy` 僅存參照，`paste` 時才 `DeepCopy()`，避免不必要的成本                     |
+| 唯讀/狀態修改分界    | 明確分開     | 唯讀走 Visitor，狀態修改走 Command，職責清晰且避免 undo 歷史膨脹                 |
+| Visitor 的 OCP 方向  | 改善操作擴增 | 元件類型穩定（檔案類型不常變）；操作種類更可能擴增，Visitor 改善了正確的變動方向 |
 
 ### 開放封閉原則的實踐
 
-- **新增檔案類型**（如 `PdfFile`）：加子類別 + 每個 Visitor 加一個 `Visit` overload，不需修改現有元件邏輯
-- **新增唯讀操作**（如統計檔案數量）：加一個新的 `IFileSystemVisitor` 實作，不需修改任何元件類別
+- **新增檔案類型**（如 `PdfFile`）：加子類別 + 實作 `DeepCopy()` + 每個 Visitor 加一個 `Visit` overload，不需修改現有元件邏輯
+- **新增唯讀操作**（如統計檔案數量）：加一個新的 `IFileSystemVisitor` 實作，不需修改任何 Element 類別
 - **新增狀態修改操作**（如重新命名）：加一個新的 `ICommand` 實作，自動獲得 `CommandManager` 的 undo/redo 管理
