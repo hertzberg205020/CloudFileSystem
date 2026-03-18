@@ -2,6 +2,13 @@
 
 一個以 Console 應用程式實作的雲端檔案管理系統，展示 **Composite + Visitor + Command + Prototype** 四個設計模式的應用。
 
+## 設計文件
+
+- [`docs/design-and-implementation.md`](docs/design-and-implementation.md) — 設計與實作概念（OOA → OOD 完整推導、四個設計模式的 Pattern 框架分析、模式協作全景）
+- [`docs/OOA/ooa.jpg`](docs/OOA/ooa.jpg) — 物件導向分析圖
+- [`docs/OOD/ood-basic.jpg`](docs/OOD/ood-basic.jpg) — 物件導向設計圖
+- [`docs/OOD/ood-bonus.jpg`](docs/OOD/ood-bonus.jpg) — 物件導向設計圖（含進階功能）
+
 ## 環境需求
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
@@ -25,36 +32,36 @@ dotnet test
 
 ### 檢視指令
 
-| 指令 | 說明 | 範例 |
-|------|------|------|
-| `display` | 印出完整樹狀目錄結構（含標籤） | `display` |
-| `size [路徑]` | 遞迴計算指定目錄總容量（含 Traverse Log，預設根目錄） | `size` / `size 專案文件 (Project_Docs)` |
-| `search <副檔名>` | 搜尋符合副檔名的檔案路徑（含 Traverse Log） | `search .docx` |
-| `xml` | 以 XML 格式輸出目錄結構 | `xml` |
+| 指令              | 說明                                                  | 範例                                    |
+| ----------------- | ----------------------------------------------------- | --------------------------------------- |
+| `display`         | 印出完整樹狀目錄結構（含標籤）                        | `display`                               |
+| `size [路徑]`     | 遞迴計算指定目錄總容量（含 Traverse Log，預設根目錄） | `size` / `size 專案文件 (Project_Docs)` |
+| `search <副檔名>` | 搜尋符合副檔名的檔案路徑（含 Traverse Log）           | `search .docx`                          |
+| `xml`             | 以 XML 格式輸出目錄結構                               | `xml`                                   |
 
 ### 編輯指令
 
-| 指令 | 說明 | 範例 |
-|------|------|------|
-| `delete <名稱或路徑>` | 刪除指定的檔案或目錄 | `delete README.txt` |
-| `copy <名稱或路徑>` | 複製指定元件至剪貼簿 | `copy 專案文件 (Project_Docs)` |
-| `paste [路徑]` | 將剪貼簿內容貼入指定目錄（預設根目錄，深拷貝，同名自動改名） | `paste` |
+| 指令                  | 說明                                                         | 範例                           |
+| --------------------- | ------------------------------------------------------------ | ------------------------------ |
+| `delete <名稱或路徑>` | 刪除指定的檔案或目錄                                         | `delete README.txt`            |
+| `copy <名稱或路徑>`   | 複製指定元件至剪貼簿                                         | `copy 專案文件 (Project_Docs)` |
+| `paste [路徑]`        | 將剪貼簿內容貼入指定目錄（預設根目錄，深拷貝，同名自動改名） | `paste`                        |
 
 名稱含空白時可用雙引號包住，例如 `delete "專案文件 (Project_Docs)"`。單參數指令（`delete`、`copy`、`paste`）不加引號也能正確解析，引號為可選。
 
 ### 排序指令
 
-| 指令 | 說明 | 範例 |
-|------|------|------|
+| 指令                 | 說明                 | 範例            |
+| -------------------- | -------------------- | --------------- |
 | `sort <欄位> <方向>` | 排序根目錄下的子元件 | `sort name asc` |
 
 排序欄位：`name`、`size`、`ext`（副檔名）。排序方向：`asc`（升冪）、`desc`（降冪）。
 
 ### 標籤指令
 
-| 指令 | 說明 | 範例 |
-|------|------|------|
-| `tag <名稱或路徑> <標籤>` | 為指定元件加上標籤 | `tag README.txt Urgent` |
+| 指令                        | 說明               | 範例                      |
+| --------------------------- | ------------------ | ------------------------- |
+| `tag <名稱或路徑> <標籤>`   | 為指定元件加上標籤 | `tag README.txt Urgent`   |
 | `untag <名稱或路徑> <標籤>` | 移除指定元件的標籤 | `untag README.txt Urgent` |
 
 可用標籤：`Urgent`、`Work`、`Personal`。每個元件可同時擁有多個標籤。
@@ -83,11 +90,11 @@ Tagged 待辦清單.txt as Urgent
 
 ### 狀態管理
 
-| 指令 | 說明 |
-|------|------|
-| `undo` | 復原上一次的編輯操作 |
+| 指令   | 說明                   |
+| ------ | ---------------------- |
+| `undo` | 復原上一次的編輯操作   |
 | `redo` | 重做上一次被復原的操作 |
-| `exit` | 結束程式 |
+| `exit` | 結束程式               |
 
 所有編輯操作（delete、paste、sort、tag、untag）皆支援 undo/redo。
 
