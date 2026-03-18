@@ -490,4 +490,71 @@ public class CloudFileSystemCliTests
 
         console.ErrorOutput.Should().Contain("Usage: delete");
     }
+
+    // === size 指令路徑參數測試 ===
+
+    [Fact]
+    public void Start_SizeNoArgs_StillPrintsTotalSize()
+    {
+        var (console, cli) = CreateCli("size");
+
+        cli.Start();
+
+        console.Output.Should().Contain("Total Size:");
+    }
+
+    [Fact]
+    public void Start_SizeWithPath_PrintsSubdirectorySize()
+    {
+        var (console, cli) = CreateCli("size 專案文件 (Project_Docs)");
+
+        cli.Start();
+
+        console.Output.Should().Contain("Total Size: 2.5MB");
+    }
+
+    [Fact]
+    public void Start_SizeWithNestedPath_PrintsNestedDirectorySize()
+    {
+        var (console, cli) = CreateCli(
+            "size 個人筆記 (Personal_Notes)/2025備份 (Archive_2025)"
+        );
+
+        cli.Start();
+
+        console.Output.Should().Contain("Total Size: 200KB");
+    }
+
+    [Fact]
+    public void Start_SizeWithNonExistentPath_PrintsError()
+    {
+        var (console, cli) = CreateCli("size 不存在的目錄");
+
+        cli.Start();
+
+        console.ErrorOutput.Should().Contain("Not found:");
+    }
+
+    [Fact]
+    public void Start_SizeWithFilePath_PrintsError()
+    {
+        var (console, cli) = CreateCli("size README.txt");
+
+        cli.Start();
+
+        console.ErrorOutput.Should().Contain("Not a directory:");
+    }
+
+    [Fact]
+    public void Start_SizeWithEmptyDirectory_PrintsZero()
+    {
+        var (console, cli) = CreateCli(
+            "delete 個人筆記 (Personal_Notes)/2025備份 (Archive_2025)/舊會議記錄.docx",
+            "size 個人筆記 (Personal_Notes)/2025備份 (Archive_2025)"
+        );
+
+        cli.Start();
+
+        console.Output.Should().Contain("Total Size: 0B");
+    }
 }
