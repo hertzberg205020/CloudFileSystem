@@ -28,8 +28,8 @@ dotnet test
 | 指令 | 說明 | 範例 |
 |------|------|------|
 | `display` | 印出完整樹狀目錄結構（含標籤） | `display` |
-| `size` | 遞迴計算根目錄總容量（含 Traverse Log） | `size` |
-| `search <副檔名>` | 搜尋符合副檔名的檔案路徑 | `search .docx` |
+| `size [路徑]` | 遞迴計算指定目錄總容量（含 Traverse Log，預設根目錄） | `size` / `size 專案文件 (Project_Docs)` |
+| `search <副檔名>` | 搜尋符合副檔名的檔案路徑（含 Traverse Log） | `search .docx` |
 | `xml` | 以 XML 格式輸出目錄結構 | `xml` |
 
 ### 編輯指令
@@ -128,6 +128,12 @@ Pasted: README.txt
 
 根目錄 (Root)> paste 專案文件 (Project_Docs)
 Pasted: README.txt
+
+根目錄 (Root)> size 專案文件 (Project_Docs)
+Visiting: 根目錄 (Root)/專案文件 (Project_Docs)
+Visiting: 根目錄 (Root)/專案文件 (Project_Docs)/需求規格書.docx
+Visiting: 根目錄 (Root)/專案文件 (Project_Docs)/系統架構圖.png
+Total Size: 2.5MB
 
 根目錄 (Root)> sort name asc
 Sorted by Name Asc
