@@ -73,7 +73,7 @@ public class CloudFileSystemCli
                     break;
 
                 case "size":
-                    HandleSize();
+                    HandleSize(parts);
                     break;
 
                 case "search":
@@ -136,10 +136,26 @@ public class CloudFileSystemCli
         _console.Write(visitor.GetOutput());
     }
 
-    private void HandleSize()
+    private void HandleSize(string[] parts)
     {
+        var target = _root;
+        if (parts.Length > 1)
+        {
+            var path = string.Join(' ', parts[1..]);
+            var found = FindChild(path);
+            if (found == null)
+                return;
+            if (found is not Directory dir)
+            {
+                _console.WriteError($"Not a directory: {found.Name}");
+                return;
+            }
+
+            target = dir;
+        }
+
         var visitor = new SizeCalculatorVisitor(_console);
-        _root.Accept(visitor);
+        target.Accept(visitor);
         _console.WriteLine($"Total Size: {File.FormatSize(visitor.TotalSize)}");
     }
 
