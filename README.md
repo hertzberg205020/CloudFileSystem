@@ -159,3 +159,10 @@ CloudFileSystem.ConsoleApp/
 - **Command Pattern**：將突變操作封裝為 `ICommand`（`Execute()` + `Undo()`），透過 `CommandManager` 以兩個 Stack 管理 undo/redo 歷史。
 - **Prototype Pattern**：`FileSystemComponent.DeepCopy()` 支援 Composite 樹狀結構的遞迴深拷貝，用於複製/貼上功能。
 - **IConsole 抽象**：將標準 I/O 抽象為介面，測試時透過 stub 注入預設輸入並擷取輸出。
+
+## 設計文件
+
+- [`docs/design-and-implementation.md`](docs/design-and-implementation.md) — 設計與實作概念（OOA → OOD 完整推導、四個設計模式的 Pattern 框架分析、模式協作全景）
+- [`docs/OOA/ooa.jpg`](docs/OOA/ooa.jpg) — 物件導向分析圖
+- [`docs/OOD/ood-basic.jpg`](docs/OOD/ood-basic.jpg) — 物件導向設計圖
+- [`docs/OOD/ood-bonus.jpg`](docs/OOD/ood-bonus.jpg) — 物件導向設計圖（含進階功能）
