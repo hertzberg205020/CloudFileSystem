@@ -582,4 +582,19 @@ public class CloudFileSystemCliTests
         var displayOutput = console.Output[console.Output.IndexOf("根目錄 (Root)\n")..];
         displayOutput.Should().NotContain("待辦清單.txt");
     }
+
+    [Fact]
+    public void Start_CopyWithQuotedPath_CopiesToClipboard()
+    {
+        var (console, cli) = CreateCli(
+            "copy \"個人筆記 (Personal_Notes)/待辦清單.txt\"",
+            "paste",
+            "display"
+        );
+
+        cli.Start();
+
+        console.Output.Should().Contain("Copied: 待辦清單.txt");
+        console.Output.Should().Contain("Pasted: 待辦清單.txt");
+    }
 }
