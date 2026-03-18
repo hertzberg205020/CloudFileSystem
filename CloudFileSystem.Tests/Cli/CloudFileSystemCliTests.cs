@@ -597,4 +597,30 @@ public class CloudFileSystemCliTests
         console.Output.Should().Contain("Copied: 待辦清單.txt");
         console.Output.Should().Contain("Pasted: 待辦清單.txt");
     }
+
+    [Fact]
+    public void Start_PasteWithQuotedPath_PastesIntoTarget()
+    {
+        var (console, cli) = CreateCli(
+            "copy README.txt",
+            "paste \"專案文件 (Project_Docs)\"",
+            "display"
+        );
+
+        cli.Start();
+
+        console.Output.Should().Contain("Pasted: README.txt");
+        var display = console.Output[console.Output.LastIndexOf("根目錄 (Root)\n")..];
+        var lines = display.Split('\n');
+        var projectDocsIndex = Array.FindIndex(
+            lines,
+            l => l.Contains("專案文件 (Project_Docs)")
+        );
+        var readmeUnderProject = Array.FindIndex(
+            lines,
+            projectDocsIndex + 1,
+            l => l.Contains("README.txt") && l.Contains("│")
+        );
+        readmeUnderProject.Should().BeGreaterThan(projectDocsIndex);
+    }
 }
