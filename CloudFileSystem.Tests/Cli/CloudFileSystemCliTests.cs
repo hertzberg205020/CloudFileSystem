@@ -557,4 +557,14 @@ public class CloudFileSystemCliTests
 
         console.Output.Should().Contain("Total Size: 0B");
     }
+
+    [Fact]
+    public void Start_SizeWithQuotedPath_PrintsSubdirectorySize()
+    {
+        var (console, cli) = CreateCli("size \"專案文件 (Project_Docs)\"");
+
+        cli.Start();
+
+        console.Output.Should().Contain("Total Size: 2.5MB");
+    }
 }
