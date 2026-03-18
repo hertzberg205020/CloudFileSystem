@@ -567,4 +567,19 @@ public class CloudFileSystemCliTests
 
         console.Output.Should().Contain("Total Size: 2.5MB");
     }
+
+    [Fact]
+    public void Start_DeleteWithQuotedPath_DeletesCorrectly()
+    {
+        var (console, cli) = CreateCli(
+            "delete \"個人筆記 (Personal_Notes)/待辦清單.txt\"",
+            "display"
+        );
+
+        cli.Start();
+
+        console.Output.Should().Contain("Deleted: 待辦清單.txt");
+        var displayOutput = console.Output[console.Output.IndexOf("根目錄 (Root)\n")..];
+        displayOutput.Should().NotContain("待辦清單.txt");
+    }
 }
