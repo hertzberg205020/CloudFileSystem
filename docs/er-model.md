@@ -17,7 +17,6 @@ erDiagram
         int Width "ImageFile 專屬，其餘為 NULL"
         int Height "ImageFile 專屬，其餘為 NULL"
         varchar Encoding "TextFile 專屬，其餘為 NULL"
-        int SortOrder "同層排序順序"
     }
 
     Tags {
@@ -26,8 +25,8 @@ erDiagram
     }
 
     ComponentTags {
-        bigint ComponentId PK_FK
-        bigint TagId PK_FK
+        bigint ComponentId PK, FK
+        bigint TagId PK, FK
     }
 
     FileSystemComponents ||--o{ FileSystemComponents : "ParentId (children)"
@@ -51,7 +50,6 @@ erDiagram
 | `Width` | INT NULL | ImageFile 專屬 |
 | `Height` | INT NULL | ImageFile 專屬 |
 | `Encoding` | VARCHAR NULL | TextFile 專屬 |
-| `SortOrder` | INT | 同層排序順序，用於保持 children 的排列 |
 
 ### Tags（標籤主表）
 
@@ -99,7 +97,7 @@ erDiagram
 ```sql
 SELECT * FROM FileSystemComponents
 WHERE ParentId = @directoryId
-ORDER BY SortOrder;
+ORDER BY Name;
 ```
 
 ### 遞迴查詢整棵子樹
@@ -111,7 +109,7 @@ WITH RECURSIVE Subtree AS (
     SELECT c.* FROM FileSystemComponents c
     JOIN Subtree s ON c.ParentId = s.Id
 )
-SELECT * FROM Subtree ORDER BY ParentId, SortOrder;
+SELECT * FROM Subtree ORDER BY ParentId, Name;
 ```
 
 ### 查詢元件的完整路徑
@@ -165,8 +163,8 @@ ALTER TABLE FileSystemComponents
     FOREIGN KEY (ParentId) REFERENCES FileSystemComponents(Id);
 
 -- 查詢 children 的常用索引
-CREATE INDEX IX_ParentId_SortOrder
-    ON FileSystemComponents (ParentId, SortOrder);
+CREATE INDEX IX_ParentId
+    ON FileSystemComponents (ParentId);
 
 -- 確保同層不重名
 CREATE UNIQUE INDEX IX_ParentId_Name
@@ -182,11 +180,3 @@ ALTER TABLE ComponentTags
         REFERENCES Tags(Id);
 ```
 
-## SortOrder 欄位設計
-
-`SortOrder` 用於持久化 `Directory._children` 的排列順序：
-
-- 初始插入時依序編號（10, 20, 30...留間隔方便插入）
-- `sort` 指令執行後，依新順序重新編號
-- 查詢 children 時 `ORDER BY SortOrder`
-- `Insert(index)` 操作時，計算間隔值或重新編號
