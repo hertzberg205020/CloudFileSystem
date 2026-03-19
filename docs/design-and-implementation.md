@@ -75,13 +75,13 @@ CloudFileSystem/
 
 #### 共同屬性抽象
 
-三種檔案皆有**檔名、大小、建立時間**，而目錄也有**名稱**。這指向一個**抽象基底類別**，統一所有元件的共同介面：
+三種檔案皆有**檔名、大小、建立時間**——這指向一個**抽象基底類別** `File`，統一三種檔案的共同屬性。目錄也有**名稱**，但其性質與檔案不同（持有子元件而非檔案內容），在分析階段作為獨立實體處理。
 
 ```txt
-FileSystemComponent（抽象）
-├── Name：所有元件共有
-├── GetSize()：目錄遞迴加總，檔案回傳自身大小
-└── Parent：維護父子關係，根目錄為 null
+File（抽象）
+├── Name：檔案名稱
+├── Size：檔案大小
+└── CreatedAt：建立時間
 ```
 
 #### 差異屬性識別
@@ -94,19 +94,16 @@ FileSystemComponent（抽象）
 | 圖片      | Width, Height（解析度） |
 | 純文字檔  | Encoding（編碼）        |
 
-#### 統一介面原則
-
-客戶訪談中的「目錄可以一層套一層」暗示了一個關鍵需求：**外部操作不需要區分目錄與檔案**。無論是計算大小、刪除、複製，都應該以相同方式操作。這是後續選用 Composite Pattern 的核心驅動力。
-
 #### 領域模型結構
 
 ```txt
-FileSystemComponent（抽象父類別）
-├── Directory（持有 children 清單）
-└── File（抽象，持有 Size + CreatedAt）
-    ├── WordDocument（+ PageCount）
-    ├── ImageFile（+ Width, Height）
-    └── TextFile（+ Encoding）
+File（抽象）
+├── WordDocument（+ PageCount）
+├── ImageFile（+ Width, Height）
+└── TextFile（+ Encoding）
+
+Directory（持有 Name + children 清單）
+└── children 可以是 File 或 Directory（遞迴複合）
 ```
 
 ### 2.3 功能需求與操作分類
@@ -154,7 +151,7 @@ FileSystemComponent（抽象父類別）
 
 #### Context
 
-OOA 階段識別出目錄與檔案構成遞迴樹狀結構——目錄可無限嵌套子目錄，且多種操作（顯示、刪除、複製、計算大小）需統一作用於目錄和檔案。領域模型已建立（`FileSystemComponent` → `Directory` / `File` → 三種具體檔案類型），但尚未定義結構的擴充策略。
+OOA 階段識別出目錄與檔案構成遞迴樹狀結構——目錄可無限嵌套子目錄，且多種操作（顯示、刪除、複製、計算大小）需統一作用於目錄和檔案。領域模型已建立 `File` 抽象類別（三種具體檔案類型的共同基底）與 `Directory`，但兩者尚未統一為共同介面。
 
 #### Forces
 
