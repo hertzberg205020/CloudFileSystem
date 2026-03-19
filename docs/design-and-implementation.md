@@ -308,15 +308,15 @@ Redo()：      pop redoStack → cmd.Execute() → push undoStack
 
 #### Context
 
-Command Pattern 的 `PasteCommand` 需要對 Composite 樹狀結構進行深拷貝，以產生完全獨立的副本（修改副本不影響原件）。問題在於：由誰負責拷貝、如何處理遞迴結構與雙向參照？
+Command Pattern 的 `PasteCommand` 需要對 Composite 樹狀結構進行深拷貝，以產生完全獨立的副本（修改副本不影響原件）。目前系統尚未有機制來完成這件事。
 
 #### Forces
 
-- **動態建立（Dynamic Creation）**：執行深拷貝時，被複製的節點其具體類別（WordDocument、ImageFile、TextFile、Directory）只有在執行期才能確定，編譯期無法得知。深拷貝的邏輯無法針對每種具體類別分別撰寫建立程式碼。這條 Force 封鎖了直接 `new` 具體類別這條路。
-- **複雜初始化（Complex Initialization）**：若被複製的節點是 Directory，深拷貝必須遞迴走訪並複製其內部所有子節點（子節點本身也可能是 Directory），才能確保副本與原樹不共享任何參照。同時每個節點透過 `Parent` 屬性反向引用父節點，構成雙向參照，新子樹內部的所有 `Parent` 必須正確指向新建立的父節點。結構越深越廣，初始化過程就越繁瑣。這條 Force 封鎖了「每次都從頭建構」這條路。
-- **狀態保留（State Retention）**：深拷貝產生的副本必須完整保留原節點的所有狀態——名稱、標籤，以及各子型別的專屬屬性（PageCount、Width/Height、Encoding）。不能用預設建構子建立空白物件再逐一設值，這既容易遺漏屬性，也破壞了封裝性。這條 Force 封鎖了「建立空白物件再設值」這條路。
+- **動態建立（Dynamic Creation）**：執行深拷貝時，被複製的節點其具體類別（WordDocument、ImageFile、TextFile、Directory）只有在執行期才能確定，編譯期無法得知。
+- **複雜初始化（Complex Initialization）**：若被複製的節點是 Directory，深拷貝必須遞迴走訪並複製其內部所有子節點（子節點本身也可能是 Directory），才能確保副本與原樹不共享任何參照。同時每個節點透過 `Parent` 屬性反向引用父節點，構成雙向參照，新子樹內部的所有 `Parent` 必須正確指向新建立的父節點。結構越深越廣，初始化過程就越繁瑣。
+- **狀態保留（State Retention）**：深拷貝產生的副本必須攜帶原物件的完整狀態與結構，而非從空白狀態開始——名稱、標籤、各子型別的專屬屬性（PageCount、Width/Height、Encoding），以及 Directory 內部整棵子樹的組成。物件的內部結構可能很複雜，外部根本無法完整地重建其內部狀態。
 
-三條 Force 合在一起，把所有其他建立物件的方式都排除了。唯一剩下的路就是——讓物件自己複製自己，因為**只有物件本身同時擁有關於自己具體類別、初始化結果、與完整內部狀態的知識**。
+三條 Force 合在一起，把所有其他建立物件的方式都排除了——不能直接 `new`（Dynamic Creation）、不能從頭建構（Complex Initialization）、不能建立空白物件再逐一設值（State Retention）。唯一剩下的路就是讓物件自己複製自己，因為**只有物件本身同時擁有關於自己具體類別、初始化結果、與完整內部狀態的知識**。
 
 #### Problem
 
