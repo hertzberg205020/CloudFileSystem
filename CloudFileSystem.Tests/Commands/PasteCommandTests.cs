@@ -139,4 +139,63 @@ public class PasteCommandTests
         target.Children.Should().HaveCount(1);
         target.Children[0].Should().BeSameAs(firstCloned);
     }
+
+    [Fact]
+    public void Execute_OriginalTaggedAfterSnapshot_PasteReflectsSnapshotState()
+    {
+        // Arrange
+        var target = new Directory("Root");
+        var file = new TextFile("test.txt", 100, TestDate, "UTF-8");
+        file.AddTag(Tag.Urgent);
+        var snapshot = file.DeepCopy(); // 快照時有 Urgent
+        file.RemoveTag(Tag.Urgent); // 原件移除 Urgent
+        var command = new PasteCommand(target, snapshot);
+
+        // Act
+        command.Execute();
+
+        // Assert — 貼上的副本反映快照時的狀態（有 Urgent）
+        target.Children[0].Tags.Should().Contain(Tag.Urgent);
+    }
+
+    [Fact]
+    public void Execute_DirectoryChildAddedAfterSnapshot_PasteReflectsSnapshotChildren()
+    {
+        // Arrange
+        var target = new Directory("Root");
+        var dir = new Directory("Sub");
+        dir.Add(new TextFile("a.txt", 100, TestDate, "UTF-8"));
+        dir.Add(new TextFile("b.txt", 200, TestDate, "UTF-8"));
+        var snapshot = dir.DeepCopy(); // 快照時有 2 children
+        dir.Add(new TextFile("c.txt", 300, TestDate, "UTF-8")); // 原件新增第 3 個
+        var command = new PasteCommand(target, snapshot);
+
+        // Act
+        command.Execute();
+
+        // Assert — 貼上的副本反映快照時的 children 數量
+        var pasted = (Directory)target.Children[0];
+        pasted.Children.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public void Execute_DirectoryChildRemovedAfterSnapshot_PasteRetainsSnapshotChildren()
+    {
+        // Arrange
+        var target = new Directory("Root");
+        var dir = new Directory("Sub");
+        var childA = new TextFile("a.txt", 100, TestDate, "UTF-8");
+        dir.Add(childA);
+        dir.Add(new TextFile("b.txt", 200, TestDate, "UTF-8"));
+        var snapshot = dir.DeepCopy(); // 快照時有 2 children
+        dir.Remove(childA); // 原件移除 1 個
+        var command = new PasteCommand(target, snapshot);
+
+        // Act
+        command.Execute();
+
+        // Assert — 貼上的副本仍保留快照時的 2 children
+        var pasted = (Directory)target.Children[0];
+        pasted.Children.Should().HaveCount(2);
+    }
 }

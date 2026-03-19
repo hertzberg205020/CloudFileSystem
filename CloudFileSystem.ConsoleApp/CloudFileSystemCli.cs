@@ -194,7 +194,7 @@ public class CloudFileSystemCli
         if (component == null)
             return;
 
-        _clipboard = component;
+        _clipboard = component.DeepCopy();
         _console.WriteLine($"Copied: {component.Name}");
     }
 

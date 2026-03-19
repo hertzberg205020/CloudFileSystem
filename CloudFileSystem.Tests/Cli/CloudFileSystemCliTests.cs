@@ -422,6 +422,48 @@ public class CloudFileSystemCliTests
     }
 
     [Fact]
+    public void Start_CopyThenTagOriginal_PasteDoesNotReflectTagChange()
+    {
+        var (console, cli) = CreateCli(
+            "copy README.txt",
+            "tag README.txt Urgent",
+            "paste",
+            "display",
+            "exit"
+        );
+
+        cli.Start();
+
+        var display = console.Output[console.Output.LastIndexOf("根目錄 (Root)\n")..];
+        // 原始 README.txt 應有 {Urgent}
+        display.Should().Contain("README.txt").And.Contain("{Urgent}");
+        // 貼上的 README (1).txt 不應有 {Urgent}
+        var lines = display.Split('\n');
+        var copyLine = lines.First(l => l.Contains("README (1).txt"));
+        copyLine.Should().NotContain("{Urgent}");
+    }
+
+    [Fact]
+    public void Start_CopyThenDeleteOriginal_PasteStillWorks()
+    {
+        var (console, cli) = CreateCli(
+            "copy README.txt",
+            "delete README.txt",
+            "paste",
+            "display",
+            "exit"
+        );
+
+        cli.Start();
+
+        console.Output.Should().Contain("Deleted: README.txt");
+        console.Output.Should().Contain("Pasted: README.txt");
+        // display 中應有貼上的 README.txt
+        var display = console.Output[console.Output.LastIndexOf("根目錄 (Root)\n")..];
+        display.Should().Contain("README.txt");
+    }
+
+    [Fact]
     public void Start_SortInvalidField_PrintsError()
     {
         var (console, cli) = CreateCli("sort invalid asc");
