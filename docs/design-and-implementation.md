@@ -236,7 +236,7 @@ Element.Accept(visitor)     → 第一次分派：由元件實際型別決定進
 #### Resulting Context
 
 - **好處**：新增操作只需加 Visitor 類別，不修改任何 Element；每種操作的邏輯集中在單一類別中，易於維護。
-- **取捨**：新增 Element 類型時需修改所有 Visitor（加 `Visit` overload）。但本系統中元件類型穩定，操作種類更可能擴增，Visitor 改善了正確的變動方向。
+- **取捨**：新增 Element 類型時需修改所有 Visitor（加 `Visit` overload）。
 - **銜接**：Visitor 處理唯讀操作，但系統還需支援狀態修改操作（刪除、貼上、排序、標籤/取消標籤），且這些操作需支援 undo/redo。每個操作的逆邏輯各不相同，需要統一的抽象來管理 → 引出 **Command Pattern**。
 
 ### 3.3 Command Pattern — 可復原的狀態修改操作管理
@@ -293,7 +293,7 @@ Redo()：      pop redoStack → cmd.Execute() → push undoStack
 #### Resulting Context
 
 - **好處**：新增操作只需加 Command 類別即自動獲得 undo/redo 支援；Invoker 與 Receiver 完全解耦，歷史管理邏輯集中在 `CommandManager`。
-- **取捨**：每個 Command 需自行設計狀態保存策略（記錄哪些執行前狀態、如何還原），增加了各 Command 的實作責任。
+- 每個 Command 需自行設計狀態保存策略（記錄哪些執行前狀態、如何還原）。
 - **銜接**：`PasteCommand` 需要對 Composite 樹進行深拷貝以產生獨立副本（修改副本不影響原件）。由於 Directory 的 children 可能是任何子型別，且結構存在遞迴自我關聯與雙向參照，深拷貝邏輯不能由外部硬編碼 → 引出 **Prototype Pattern**。
 
 ### 3.4 Prototype Pattern — 樹狀結構的深拷貝
@@ -344,7 +344,7 @@ Directory.DeepCopy()
 #### Resulting Context
 
 - **好處**：新增檔案類型只需實作自己的 `DeepCopy()`，`PasteCommand` 完全不需修改。每個元件自行確保深拷貝的完整性，外部呼叫端無需了解內部結構。
-- **取捨**：每個 ConcretePrototype 需自行確保深拷貝的完整性（包含標籤、專屬屬性、遞迴子樹），若遺漏某個屬性將導致副本不完整。
+- 每個 ConcretePrototype 需自行確保深拷貝的完整性（包含標籤、專屬屬性、遞迴子樹），若遺漏某個屬性將導致副本不完整。
 
 ---
 
