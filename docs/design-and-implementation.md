@@ -109,8 +109,6 @@ FileSystemComponent（抽象父類別）
     └── TextFile（+ Encoding）
 ```
 
-> 參照 OOA 圖：[`docs/OOA/ooa.jpg`](OOA/ooa.jpg)
-
 ### 2.3 功能需求與操作分類
 
 將功能需求依**是否修改資料結構**分為兩類，此分類直接驅動後續設計模式的選擇：
@@ -144,8 +142,6 @@ FileSystemComponent（抽象父類別）
 複製/貼上需要產生**完全獨立的副本**。由於目錄可無限嵌套，拷貝必須遞迴處理整棵子樹，且每個元件自行負責自己的克隆邏輯。
 → 這驅動了 **Prototype Pattern** 的選用。
 
-**小結**：OOA 階段識別的三個核心問題——「統一操作遞迴結構」、「解耦走訪操作與資料結構」、「可復原的突變操作」——分別對應了 Composite、Visitor、Command 三個設計模式的選用，再加上深拷貝需求引入的 Prototype，構成了本專案的四個設計模式。
-
 ---
 
 ## 三、物件導向設計（OOD）— 以 Pattern 框架推導設計結構
@@ -153,7 +149,6 @@ FileSystemComponent（抽象父類別）
 本章以 **Pattern 框架**（Context → Forces → Problem → Solution → Resulting Context）為敘事結構，搭配**依賴反轉之重構三步驟**（封裝變動之處 → 萃取共同行為 → 委派/複合）推導每個設計模式的設計結構。四個模式之間以 Resulting Context → Context 的銜接形成連續的設計推導鏈。
 
 > 參照 OOD 圖：[`docs/OOD/ood-basic.jpg`](OOD/ood-basic.jpg)、[`docs/OOD/ood-bonus.jpg`](OOD/ood-bonus.jpg)
-> 參照 UML 類別圖：[`spec/class-diagram.md`](../spec/class-diagram.md)
 
 ### 3.1 Composite Pattern — 遞迴樹狀結構的統一操作
 
