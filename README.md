@@ -8,7 +8,7 @@
 - [`docs/OOA/ooa.jpg`](docs/OOA/ooa.jpg) — 物件導向分析圖
 - [`docs/OOD/ood-basic.jpg`](docs/OOD/ood-basic.jpg) — 物件導向設計圖
 - [`docs/OOD/ood-bonus.jpg`](docs/OOD/ood-bonus.jpg) — 物件導向設計圖（含進階功能）
-- [`docs/ER-Model.jpg`](docs/ER-Model.jpg) — 資料庫實體關聯圖
+- [`docs/ER-Model/ER-Model.jpg`](docs/ER-Model/ER-Model.jpg) — 資料庫實體關聯圖
 
 ## 環境需求
 
