@@ -45,7 +45,9 @@ CREATE TABLE FileSystemComponent (
 );
 ```
 
-`ParentId` 自我參照實現 Composite Pattern 的遞迴樹狀結構。`ComponentType` 作為鑑別欄位區分 Directory 與各種 File。
+`ParentId` 自我參照實現 Composite Pattern 的遞迴樹狀結構。`ComponentType` 作為鑑別欄位區分 Directory 與各種 File，合法值為 `'Directory'`、`'WordDocument'`、`'ImageFile'`、`'TextFile'`（與 C# 類別名稱一致，新增檔案類型時同步擴充）。
+
+> **關於 `ParentId` 的 ON DELETE 行為**：SQL Server 不允許自引用外鍵搭配 `ON DELETE CASCADE`（會觸發 "multiple cascade paths" 錯誤）。因此子樹的刪除由應用層的 Command Pattern（`DeleteCommand`）以遞迴方式處理，而非依賴資料庫層的串聯刪除。
 
 ### Composite 層 — Directory 子表
 
@@ -96,6 +98,27 @@ CREATE TABLE TextFile (
 );
 ```
 
+### 標籤層 — 多對多標記
+
+```sql
+CREATE TABLE Tag (
+    Id      INT PRIMARY KEY,
+    Name    VARCHAR(20) NOT NULL UNIQUE
+);
+
+CREATE TABLE ComponentTag (
+    ComponentId BIGINT NOT NULL,
+    TagId       INT NOT NULL,
+    PRIMARY KEY (ComponentId, TagId),
+    FOREIGN KEY (ComponentId)
+        REFERENCES FileSystemComponent(Id) ON DELETE CASCADE,
+    FOREIGN KEY (TagId)
+        REFERENCES Tag(Id)
+);
+```
+
+標籤掛在 `FileSystemComponent` 層級，對應 C# 的 `HashSet<Tag> Tags` 屬性——所有元件（Directory 和所有 File 類型）都可以被標記。`ComponentTag` 透過複合主鍵 `(ComponentId, TagId)` 確保同一元件不會重複標籤。預定義三個標籤：`Urgent`、`Work`、`Personal`。
+
 ### 應對 Force 的方式
 
 #### Force 1 的應對方式
@@ -130,6 +153,34 @@ CREATE TABLE PdfFile (
 + INSERT/UPDATE 需要操作多張表（寫入一個 WordDocument 要 INSERT 三張表），必須包在 transaction 中確保一致性，寫入效能不如 STI。
 + 整體 schema 的表數量較多，遷移管理成本比 STI 高。
 
+### 約束與索引
+
+```sql
+-- 同一目錄下不可有同名元件（對應 C# Directory.Add() 的同名檢查）
+CREATE UNIQUE INDEX IX_ParentId_Name
+    ON FileSystemComponent (ParentId, Name)
+    WHERE ParentId IS NOT NULL;
+
+-- 遞迴查詢 children 的核心索引
+CREATE INDEX IX_ParentId
+    ON FileSystemComponent (ParentId);
+
+-- 資料完整性約束（對應 C# 各 Model 的驗證邏輯）
+ALTER TABLE [File]
+    ADD CONSTRAINT CK_File_Size CHECK ([Size] >= 0);
+
+ALTER TABLE WordDocument
+    ADD CONSTRAINT CK_Word_PageCount CHECK (PageCount >= 0);
+
+ALTER TABLE ImageFile
+    ADD CONSTRAINT CK_Image_Width CHECK (Width > 0);
+
+ALTER TABLE ImageFile
+    ADD CONSTRAINT CK_Image_Height CHECK (Height > 0);
+```
+
+條件唯一索引 `IX_ParentId_Name` 使用 `WHERE ParentId IS NOT NULL` 的 filtered index，是因為根目錄的 `ParentId` 為 NULL，不參與同層同名的約束。CHECK 約束確保資料庫層級的驗證與 C# Model 層的 `ArgumentOutOfRangeException` 驗證一致。
+
 ## 另外 2 種策略的簡要分析
 
 ### STI（Single Table Inheritance）— 不合適
@@ -137,9 +188,11 @@ CREATE TABLE PdfFile (
 STI 把所有子類別塞進同一張表。當新增 PDF 檔案類型時，必須對這張**唯一的核心表** `ALTER TABLE ADD COLUMN` 加入 `IsEncrypted` 等欄位。
 
 + **對 Force 1 的回應**：可以支援新類型，但每次都要修改同一張表的 schema。
-+ **對 Force 2 的回應**：**直接違反 OCP**。每新增一種檔案類型，核心表就要被 ALTER 一次，既有欄位越來越多 NULL，表越來越寬越稀疏。
++ **對 Force 2 的回應**：**違反 OCP**。每新增一種檔案類型，核心表就要被 ALTER 一次，既有欄位越來越多 NULL，表越來越寬越稀疏。
 
-結論：兩個 force 都無法被妥善平衡，排除。
+公平地說，在目前僅有 3 種檔案類型、各 1-2 個專屬欄位的規模下，STI 的 nullable 成本其實很低，而且 SQL Server 中 `ALTER TABLE ADD COLUMN`（nullable）是 metadata-only 操作，不鎖表、不重寫資料。然而，隨著系統持續演化——當檔案類型增長到 10 種以上——表會變得過寬且語意模糊，每一行都有大量與自身類型無關的 NULL 欄位，表的可讀性和維護性逐步劣化。CTI 的優勢在系統規模成長後會更加明顯。
+
+結論：目前成本低，但在「系統預期會持續新增檔案類型」的前提下，隨擴充累積的結構劣化使 STI 不適合作為長期策略，排除。
 
 ### Concrete Table Inheritance — 不合適
 
